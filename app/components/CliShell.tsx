@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CommandBar } from "./CommandBar";
@@ -31,15 +31,6 @@ export type OutputLine = {
   content: string;
 };
 
-// Thematic loading words pool
-const LOADING_WORDS = [
-  "Compiling",
-  "Loading",
-  "Querying",
-  "Rendering",
-  "Parsing",
-  "Resolving",
-];
 const LOADER_DURATION = 1300;
 
 export default function CliShell() {
@@ -52,8 +43,7 @@ export default function CliShell() {
   const outputRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const lineCounter = useRef(0);
-  const loadingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const loadingLineIdRef = useRef<number | null>(null);
+  const loadingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const commandQueueRef = useRef<string[]>([]);
   const isProcessingRef = useRef(false);
   const processCommandRef = useRef<((trimmed: string) => void) | null>(null);
@@ -75,16 +65,10 @@ export default function CliShell() {
       clearTimeout(loadingTimerRef.current);
       loadingTimerRef.current = null;
     }
-    loadingLineIdRef.current = null;
+    
   }, []);
 
-  const getRandomLoadingWord = useCallback(() => {
-    return LOADING_WORDS[Math.floor(Math.random() * LOADING_WORDS.length)];
-  }, []);
 
-  const removeLoadingLine = useCallback((lineId: number) => {
-    setOutputLines((prev) => prev.filter((line) => line.id !== lineId));
-  }, []);
 
   const scrollToTop = useCallback(() => {
     if (outputRef.current) {
@@ -92,17 +76,7 @@ export default function CliShell() {
     }
   }, []);
 
-  const scrollToBottom = useCallback(() => {
-    if (outputRef.current) {
-      outputRef.current.scrollTop = outputRef.current.scrollHeight;
-    }
-  }, []);
 
-  useEffect(() => {
-    if (loadingLineIdRef.current === null) {
-      scrollToBottom();
-    }
-  }, [outputLines, scrollToBottom]);
 
   useEffect(() => {
     if (activeView === "work") {
@@ -131,14 +105,14 @@ export default function CliShell() {
         case "/help":
           setPendingCommand("help");
           addLine("system", "Loading help...");
-          loadingLineIdRef.current = getNextId();
+          
           loadingTimerRef.current = setTimeout(() => {
             addLine("system", helpText);
             setPendingCommand(null);
-            loadingLineIdRef.current = null;
+            
             if (commandQueueRef.current.length > 0) {
               const next = commandQueueRef.current.shift()!;
-              processCommand(next);
+              processCommandRef.current?.(next);
             } else {
               isProcessingRef.current = false;
             }
@@ -148,7 +122,7 @@ export default function CliShell() {
         case "/about":
           setPendingCommand("about");
           addLine("system", "Fetching about info...");
-          loadingLineIdRef.current = getNextId();
+          
           loadingTimerRef.current = setTimeout(() => {
             addLine("about");
             addLine(
@@ -156,10 +130,10 @@ export default function CliShell() {
               "Type /contact to get in touch or /work to see my projects."
             );
             setPendingCommand(null);
-            loadingLineIdRef.current = null;
+            
             if (commandQueueRef.current.length > 0) {
               const next = commandQueueRef.current.shift()!;
-              processCommand(next);
+              processCommandRef.current?.(next);
             } else {
               isProcessingRef.current = false;
             }
@@ -169,16 +143,16 @@ export default function CliShell() {
         case "/work":
           setPendingCommand("work");
           addLine("system", "Loading projects...");
-          loadingLineIdRef.current = getNextId();
+          
           loadingTimerRef.current = setTimeout(() => {
             addLine("work");
             setActiveView("work");
             addLine("system", `${projectsData.length} projects loaded.`);
             setPendingCommand(null);
-            loadingLineIdRef.current = null;
+            
             if (commandQueueRef.current.length > 0) {
               const next = commandQueueRef.current.shift()!;
-              processCommand(next);
+              processCommandRef.current?.(next);
             } else {
               isProcessingRef.current = false;
             }
@@ -188,14 +162,14 @@ export default function CliShell() {
         case "/contact":
           setPendingCommand("contact");
           addLine("system", "Loading contact info...");
-          loadingLineIdRef.current = getNextId();
+          
           loadingTimerRef.current = setTimeout(() => {
             addLine("contact");
             setPendingCommand(null);
-            loadingLineIdRef.current = null;
+            
             if (commandQueueRef.current.length > 0) {
               const next = commandQueueRef.current.shift()!;
-              processCommand(next);
+              processCommandRef.current?.(next);
             } else {
               isProcessingRef.current = false;
             }
@@ -205,7 +179,7 @@ export default function CliShell() {
         case "/github":
           setPendingCommand("github");
           addLine("system", "Opening GitHub...");
-          loadingLineIdRef.current = getNextId();
+          
           loadingTimerRef.current = setTimeout(() => {
             window.open(contactContent.github, "_blank");
             addLine(
@@ -213,10 +187,10 @@ export default function CliShell() {
               `Opening GitHub \u2192 ${contactContent.github}`
             );
             setPendingCommand(null);
-            loadingLineIdRef.current = null;
+            
             if (commandQueueRef.current.length > 0) {
               const next = commandQueueRef.current.shift()!;
-              processCommand(next);
+              processCommandRef.current?.(next);
             } else {
               isProcessingRef.current = false;
             }
@@ -226,7 +200,7 @@ export default function CliShell() {
         case "/linkedin":
           setPendingCommand("linkedin");
           addLine("system", "Opening LinkedIn...");
-          loadingLineIdRef.current = getNextId();
+          
           loadingTimerRef.current = setTimeout(() => {
             window.open(contactContent.linkedin, "_blank");
             addLine(
@@ -234,10 +208,10 @@ export default function CliShell() {
               `Opening LinkedIn \u2192 ${contactContent.linkedin}`
             );
             setPendingCommand(null);
-            loadingLineIdRef.current = null;
+            
             if (commandQueueRef.current.length > 0) {
               const next = commandQueueRef.current.shift()!;
-              processCommand(next);
+              processCommandRef.current?.(next);
             } else {
               isProcessingRef.current = false;
             }
@@ -283,6 +257,9 @@ export default function CliShell() {
     },
     [addLine, getNextId]
   );
+
+  // Keep processCommandRef in sync with the latest processCommand function
+  processCommandRef.current = processCommand;
 
   const executeCommand = useCallback(
     (input: string) => {

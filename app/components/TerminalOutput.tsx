@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { forwardRef } from "react";
 import Image from "next/image";
@@ -32,9 +32,9 @@ export const TerminalOutput = forwardRef<HTMLDivElement, TerminalOutputProps>(
             <p className="text-sm text-[var(--accent-violet)]">
               <span className="loading-dots inline-flex">
                 <span>{(["/help", "/about", "/work", "/contact", "/github", "/linkedin"].includes(pendingCommand) ? pendingCommand.replace("/", "Loading ") : "Processing")}</span>
-                <span>.</span>
-                <span>.</span>
-                <span>.</span>
+                <span className="loading-dot" style={{ animationDelay: "0ms" }}>.</span>
+                <span className="loading-dot" style={{ animationDelay: "200ms" }}>.</span>
+                <span className="loading-dot" style={{ animationDelay: "400ms" }}>.</span>
               </span>
             </p>
           </div>
@@ -170,36 +170,3 @@ function ContactBlock() {
     </div>
   );
 }
-
-export const TerminalOutput = forwardRef<HTMLDivElement, TerminalOutputProps>(
-  function TerminalOutput({ lines }, ref) {
-    return (
-      <div ref={ref} className="flex-1 overflow-y-auto overscroll-contain px-4 pb-2 pt-4 sm:px-6">
-        {lines.map((line) => (
-          <div key={line.id} className="mb-2">
-            {line.type === "hero" && <HeroBlock />}
-            {line.type === "command" && <p className="text-sm text-[var(--accent-violet)]"><span className="select-none text-zinc-500">$ </span><span>{line.content}</span></p>}
-            {line.type === "system" && <pre className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-300">{line.content}</pre>}
-            {line.type === "response" && <p className="text-sm leading-relaxed text-zinc-300">{line.content}</p>}
-            {line.type === "error" && <p className="text-sm text-red-400">{line.content}</p>}
-            {line.type === "about" && <AboutBlock />}
-            {line.type === "work" && <WorkBlock />}
-
-            {line.type === "loading" && (
-              <p className="text-sm text-[var(--accent-violet)]">
-                <span className="loading-dots inline-flex">
-                  <span>{line.content}</span>
-                  <span>.</span>
-                  <span>.</span>
-                  <span>.</span>
-                </span>
-              </p>
-            )}
-            {line.type === "contact" && <ContactBlock />}
-
-          </div>
-        ))}
-      </div>
-    );
-  }
-);
