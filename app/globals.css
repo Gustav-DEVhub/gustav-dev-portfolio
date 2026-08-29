@@ -3,27 +3,85 @@
 :root {
   --background: #000000;
   --foreground: #d4d4d4;
-  --prompt: #50fa7b;
+  --prompt: #a78bfa;
   --accent: #8be9fd;
+  --accent-violet: #a78bfa;
+  --accent-green: #50fa7b;
   --error: #ff5555;
   --muted: #6272a4;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-prompt: var(--prompt);
-  --color-accent: var(--accent);
-  --color-error: var(--error);
-  --color-muted: var(--muted);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-mono), monospace;
+}
+
+/* Pixel/bitmap font utility */
+.font-pixel {
+  font-family: "Press Start 2P", cursive;
+}
+
+/* Retro/pixel identity for Gustavo Calderón Tenorio */
+.pixel-name {
+  font-family: "Press Start 2P", cursive;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--accent-violet);
+  text-shadow:
+    0 0 10px rgba(167, 139, 250, 0.45),
+    0 0 20px rgba(167, 139, 250, 0.25),
+    1px 1px 0 rgba(139, 233, 253, 0.15);
+}
+
+/* Larger variant for hero/initial state */
+.pixel-name--hero {
+  font-size: clamp(1rem, 3vw, 1.5rem);
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+}
+
+/* Medium variant for header/terminal title */
+.pixel-name--header {
+  font-size: 0.55rem;
+  line-height: 1.3;
+}
+
+/* Small variant for minimized state */
+.pixel-name--mini {
+  font-size: 0.5rem;
+  line-height: 1.3;
+}
+
+/* Subtitle styling for AI-AUGMENTED DEVELOPER */
+.pixel-subtitle {
+  font-family: "Press Start 2P", cursive;
+  font-weight: 400;
+  font-size: clamp(0.5rem, 1.5vw, 0.75rem);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent-violet);
+  text-shadow:
+    0 0 8px rgba(167, 139, 250, 0.35),
+    0 0 16px rgba(167, 139, 250, 0.15);
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .suggestion-menu button {
+    min-height: 48px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .pixel-name--hero {
+    font-size: 0.95rem;
+  }
+
+  .pixel-subtitle {
+    font-size: 0.5rem;
+  }
 }
 
 /* Custom scrollbar for the terminal feel */
@@ -41,4 +99,65 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #6272a4;
 }
+
+/* Focus visible for accessibility */
+*:focus-visible {
+  outline: 2px solid var(--accent-violet);
+  outline-offset: 2px;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse {
+    animation: none;
+  }
+}
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse {
+    animation: none;
+  }
+}
+
+/* Loading ellipsis animation */
+@keyframes ellipsis-dot {
+  0% { opacity: 0; }
+  25% { opacity: 1; }
+  100% { opacity: 1; }
+}
+
+/* Loading line pulse animation */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.loading-line {
+  animation: pulse 0.8s ease-in-out infinite;
+}
+
+.loading-dots span {
+  display: inline-block;
+  animation: ellipsis-dot 1.2s infinite;
+}
+
+.loading-dots span:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: 0.4s;
+}
+
+.loading-dots span:nth-child(3) {
+  animation-delay: 0.8s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-dots span {
+    animation: none;
+    opacity: 1;
+  }
+}
+
 

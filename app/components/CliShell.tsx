@@ -1,35 +1,62 @@
-"use client";
+﻿"use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
-import { TerminalHeader } from "./TerminalHeader";
-import { TerminalOutput } from "./TerminalOutput";
-import { TerminalInput } from "./TerminalInput";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { CommandBar } from "./CommandBar";
+import { TerminalHeader } from "./TerminalHeader";
+import { TerminalInput } from "./TerminalInput";
+import { TerminalOutput } from "./TerminalOutput";
+import { TerminatedScreen } from "./TerminatedScreen";
+import { normalizeCommand } from "@/lib/commands";
 import {
-  helpText,
-  welcomeMessage,
-  projectsData,
-  aboutContent,
   contactContent,
+  helpText,
+  projectsData,
 } from "@/lib/data";
+
+export type ActiveView = "terminal" | "about" | "work" | "contact";
+type WindowState = "open" | "minimized" | "maximized" | "closed";
 
 export type OutputLine = {
   id: number;
-  type: "system" | "command" | "response" | "error" | "project";
+  type:
+    | "hero"
+    | "system"
+    | "command"
+    | "response"
+    | "error"
+    | "about"
+    | "work"
+    | "contact"
+    | "loading";
   content: string;
-  projectIndex?: number;
 };
 
-export type ActiveView = "terminal" | "about" | "work" | "contact";
+// Thematic loading words pool
+const LOADING_WORDS = [
+  "Compiling",
+  "Loading",
+  "Querying",
+  "Rendering",
+  "Parsing",
+  "Resolving",
+];
+const LOADER_DURATION = 1300;
 
 export default function CliShell() {
   const [outputLines, setOutputLines] = useState<OutputLine[]>([]);
   const [activeView, setActiveView] = useState<ActiveView>("terminal");
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [windowState, setWindowState] = useState<WindowState>("open");
+  const [pendingCommand, setPendingCommand] = useState<string | null>(null);
+
   const outputRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const lineCounter = useRef(0);
+  const loadingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loadingLineIdRef = useRef<number | null>(null);
+  const commandQueueRef = useRef<string[]>([]);
+  const isProcessingRef = useRef(false);
+  const processCommandRef = useRef<((trimmed: string) => void) | null>(null);
 
   const getNextId = useCallback(() => {
     lineCounter.current += 1;
@@ -37,14 +64,33 @@ export default function CliShell() {
   }, []);
 
   const addLine = useCallback(
-    (type: OutputLine["type"], content: string, projectIndex?: number) => {
-      setOutputLines((prev) => [
-        ...prev,
-        { id: getNextId(), type, content, projectIndex },
-      ]);
+    (type: OutputLine["type"], content = "") => {
+      setOutputLines((prev) => [...prev, { id: getNextId(), type, content }]);
     },
     [getNextId]
   );
+
+  const clearLoadingState = useCallback(() => {
+    if (loadingTimerRef.current) {
+      clearTimeout(loadingTimerRef.current);
+      loadingTimerRef.current = null;
+    }
+    loadingLineIdRef.current = null;
+  }, []);
+
+  const getRandomLoadingWord = useCallback(() => {
+    return LOADING_WORDS[Math.floor(Math.random() * LOADING_WORDS.length)];
+  }, []);
+
+  const removeLoadingLine = useCallback((lineId: number) => {
+    setOutputLines((prev) => prev.filter((line) => line.id !== lineId));
+  }, []);
+
+  const scrollToTop = useCallback(() => {
+    if (outputRef.current) {
+      outputRef.current.scrollTop = 0;
+    }
+  }, []);
 
   const scrollToBottom = useCallback(() => {
     if (outputRef.current) {
@@ -53,85 +99,159 @@ export default function CliShell() {
   }, []);
 
   useEffect(() => {
-    scrollToBottom();
+    if (loadingLineIdRef.current === null) {
+      scrollToBottom();
+    }
   }, [outputLines, scrollToBottom]);
 
-  // Show welcome message on first mount
   useEffect(() => {
-    setOutputLines([
-      { id: getNextId(), type: "system", content: welcomeMessage },
-    ]);
+    if (activeView === "work") {
+      scrollToTop();
+    }
+  }, [activeView, scrollToTop]);
+
+  useEffect(() => {
+    setOutputLines([{ id: getNextId(), type: "hero", content: "" }]);
   }, [getNextId]);
 
-  const executeCommand = useCallback(
-    (rawInput: string) => {
-      const trimmed = rawInput.trim();
-      if (!trimmed) return;
+  useEffect(() => {
+    return () => {
+      clearLoadingState();
+    };
+  }, [clearLoadingState]);
 
-      addLine("command", `$ ${trimmed}`);
-      setCommandHistory((prev) => [trimmed, ...prev]);
-      setHistoryIndex(-1);
+  const processCommand = useCallback(
+    (trimmed: string) => {
+      setCommandHistory((prev) => [...prev, trimmed]);
+      addLine("command", trimmed);
 
-      const cmd = trimmed.toLowerCase();
+      const cmd = normalizeCommand(trimmed);
 
       switch (cmd) {
         case "/help":
-        case "help":
-          setActiveView("terminal");
-          addLine("system", helpText);
+          setPendingCommand("help");
+          addLine("system", "Loading help...");
+          loadingLineIdRef.current = getNextId();
+          loadingTimerRef.current = setTimeout(() => {
+            addLine("system", helpText);
+            setPendingCommand(null);
+            loadingLineIdRef.current = null;
+            if (commandQueueRef.current.length > 0) {
+              const next = commandQueueRef.current.shift()!;
+              processCommand(next);
+            } else {
+              isProcessingRef.current = false;
+            }
+          }, LOADER_DURATION);
           break;
 
         case "/about":
-        case "about":
-          setActiveView("about");
+          setPendingCommand("about");
+          addLine("system", "Fetching about info...");
+          loadingLineIdRef.current = getNextId();
+          loadingTimerRef.current = setTimeout(() => {
+            addLine("about");
+            addLine(
+              "system",
+              "Type /contact to get in touch or /work to see my projects."
+            );
+            setPendingCommand(null);
+            loadingLineIdRef.current = null;
+            if (commandQueueRef.current.length > 0) {
+              const next = commandQueueRef.current.shift()!;
+              processCommand(next);
+            } else {
+              isProcessingRef.current = false;
+            }
+          }, LOADER_DURATION);
           break;
 
         case "/work":
-        case "work":
-        case "/projects":
-        case "projects":
-          setActiveView("work");
+          setPendingCommand("work");
+          addLine("system", "Loading projects...");
+          loadingLineIdRef.current = getNextId();
+          loadingTimerRef.current = setTimeout(() => {
+            addLine("work");
+            setActiveView("work");
+            addLine("system", `${projectsData.length} projects loaded.`);
+            setPendingCommand(null);
+            loadingLineIdRef.current = null;
+            if (commandQueueRef.current.length > 0) {
+              const next = commandQueueRef.current.shift()!;
+              processCommand(next);
+            } else {
+              isProcessingRef.current = false;
+            }
+          }, LOADER_DURATION);
           break;
 
         case "/contact":
-        case "contact":
-          setActiveView("contact");
+          setPendingCommand("contact");
+          addLine("system", "Loading contact info...");
+          loadingLineIdRef.current = getNextId();
+          loadingTimerRef.current = setTimeout(() => {
+            addLine("contact");
+            setPendingCommand(null);
+            loadingLineIdRef.current = null;
+            if (commandQueueRef.current.length > 0) {
+              const next = commandQueueRef.current.shift()!;
+              processCommand(next);
+            } else {
+              isProcessingRef.current = false;
+            }
+          }, LOADER_DURATION);
           break;
 
         case "/github":
-        case "github":
-          addLine(
-            "system",
-            `Opening GitHub → ${contactContent.github}`
-          );
-          window.open(contactContent.github, "_blank", "noopener,noreferrer");
+          setPendingCommand("github");
+          addLine("system", "Opening GitHub...");
+          loadingLineIdRef.current = getNextId();
+          loadingTimerRef.current = setTimeout(() => {
+            window.open(contactContent.github, "_blank");
+            addLine(
+              "system",
+              `Opening GitHub \u2192 ${contactContent.github}`
+            );
+            setPendingCommand(null);
+            loadingLineIdRef.current = null;
+            if (commandQueueRef.current.length > 0) {
+              const next = commandQueueRef.current.shift()!;
+              processCommand(next);
+            } else {
+              isProcessingRef.current = false;
+            }
+          }, LOADER_DURATION);
           break;
 
         case "/linkedin":
-        case "linkedin":
-          addLine(
-            "system",
-            `Opening LinkedIn → ${contactContent.linkedin}`
-          );
-          window.open(
-            contactContent.linkedin,
-            "_blank",
-            "noopener,noreferrer"
-          );
+          setPendingCommand("linkedin");
+          addLine("system", "Opening LinkedIn...");
+          loadingLineIdRef.current = getNextId();
+          loadingTimerRef.current = setTimeout(() => {
+            window.open(contactContent.linkedin, "_blank");
+            addLine(
+              "system",
+              `Opening LinkedIn \u2192 ${contactContent.linkedin}`
+            );
+            setPendingCommand(null);
+            loadingLineIdRef.current = null;
+            if (commandQueueRef.current.length > 0) {
+              const next = commandQueueRef.current.shift()!;
+              processCommand(next);
+            } else {
+              isProcessingRef.current = false;
+            }
+          }, LOADER_DURATION);
           break;
 
         case "/clear":
-        case "clear":
-        case "cls":
-          setOutputLines([]);
-          setActiveView("terminal");
+          setOutputLines([{ id: getNextId(), type: "hero", content: "" }]);
           break;
 
-        default: {
-          // Check if it's a project command like /work 1 or project name
-          if (cmd.startsWith("/work ") || cmd.startsWith("work ")) {
-            const num = parseInt(cmd.replace(/\/?work\s+/, ""), 10);
-            if (num >= 1 && num <= projectsData.length) {
+        default:
+          if (cmd.startsWith("/project ")) {
+            const num = parseInt(cmd.split(" ")[1], 10);
+            if (!isNaN(num) && num >= 1 && num <= projectsData.length) {
               setActiveView("work");
               addLine(
                 "system",
@@ -141,16 +261,15 @@ export default function CliShell() {
             }
           }
 
-          // Try to match a project name
-          const match = projectsData.find((p) =>
-            cmd.includes(p.title.toLowerCase().replace(/\s+/g, ""))
+          const match = projectsData.find((project) =>
+            cmd.includes(project.title.toLowerCase().replace(/\s+/g, ""))
           );
           if (match) {
             setActiveView("work");
-            const idx = projectsData.indexOf(match);
+            addLine("work");
             addLine(
               "system",
-              `Viewing project ${idx + 1}: ${match.title}`
+              `Viewing project ${projectsData.indexOf(match) + 1}: ${match.title}`
             );
             break;
           }
@@ -160,241 +279,96 @@ export default function CliShell() {
             "error",
             `Command not recognized: "${trimmed}". Type /help for available commands.`
           );
-        }
       }
     },
-    [addLine]
+    [addLine, getNextId]
   );
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "ArrowUp") {
-        e.preventDefault();
-        if (historyIndex < commandHistory.length - 1) {
-          const newIndex = historyIndex + 1;
-          setHistoryIndex(newIndex);
-          e.currentTarget.value = commandHistory[newIndex];
-        }
-      } else if (e.key === "ArrowDown") {
-        e.preventDefault();
-        if (historyIndex > 0) {
-          const newIndex = historyIndex - 1;
-          setHistoryIndex(newIndex);
-          e.currentTarget.value = commandHistory[newIndex];
-        } else if (historyIndex === 0) {
-          setHistoryIndex(-1);
-          e.currentTarget.value = "";
-        }
-      } else if (e.key === "Tab") {
-        e.preventDefault();
-        // Simple autocomplete: find matching commands
-        const val = e.currentTarget.value.toLowerCase();
-        const commands = [
-          "/help",
-          "/about",
-          "/work",
-          "/contact",
-          "/github",
-          "/linkedin",
-          "/clear",
-        ];
-        const match = commands.find((c) => c.startsWith(val) && c !== val);
-        if (match) {
-          e.currentTarget.value = match;
-        }
-      } else if (e.key === "Enter") {
-        e.preventDefault();
-        executeCommand(e.currentTarget.value);
-        e.currentTarget.value = "";
+  const executeCommand = useCallback(
+    (input: string) => {
+      const trimmed = input.trim();
+      if (!trimmed) return;
+
+      if (isProcessingRef.current) {
+        commandQueueRef.current.push(trimmed);
+        return;
       }
+
+      isProcessingRef.current = true;
+      processCommand(trimmed);
     },
-    [commandHistory, historyIndex, executeCommand]
+    [processCommand]
   );
 
   const focusInput = useCallback(() => {
     inputRef.current?.focus();
   }, []);
 
+  if (windowState === "closed") {
+    return <TerminatedScreen onReopen={() => setWindowState("open")} />;
+  }
+
+  if (windowState === "minimized") {
+    return (
+      <button
+        type="button"
+        className="mx-auto flex w-full max-w-4xl items-center gap-3 rounded-lg border border-zinc-700 bg-[#161b22] px-4 py-3 text-left"
+        onClick={() => setWindowState("open")}
+        aria-label="Restore terminal"
+      >
+        <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
+        <span className="text-xs text-zinc-400">Terminal minimized</span>
+        <span className="ml-auto text-xs text-zinc-500">click to restore</span>
+      </button>
+    );
+  }
+
+  const isMaximized = windowState === "maximized";
+
   return (
     <div
-      className="w-full max-w-4xl mx-auto flex flex-col h-[85vh] sm:h-[80vh] rounded-lg overflow-hidden border border-zinc-700 bg-[#0d1117] shadow-2xl"
+      className={`mx-auto flex w-full flex-col overflow-hidden rounded-lg border border-zinc-700 bg-[#0d1117] shadow-2xl transition-all duration-300 ease-out ${
+        isMaximized
+          ? "fixed inset-0 z-50 h-[100dvh] w-[100dvw] rounded-none border-0"
+          : "h-[100dvh] max-w-4xl sm:h-[80vh]"
+      }`}
       onClick={focusInput}
     >
-      <TerminalHeader />
-      <div className="flex flex-col flex-1 min-h-0">
-        <TerminalOutput ref={outputRef} lines={outputLines} />
+      {/* Dominant Pixelated Header */}
+      <div className="flex-shrink-0 border-b border-zinc-800 bg-[#0d1117] px-4 py-3 sm:px-6 sm:py-4">
+        <p className="pixel-name pixel-name--hero text-center sm:text-left">
+          Gustavo Calderon Tenorio
+        </p>
+        <p className="pixel-subtitle mt-1 text-center sm:text-left">
+          AI-Augmented Developer
+        </p>
+      </div>
 
-        {activeView === "about" && (
-          <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4">
-            <div className="mb-4">
-              <p className="text-green-400 font-bold text-lg">{aboutContent.name}</p>
-              <p className="text-cyan-400 text-sm">{aboutContent.role}</p>
-              <p className="text-zinc-300 mt-3 leading-relaxed">{aboutContent.intro}</p>
-              <p className="text-zinc-400 mt-2 text-sm italic">{aboutContent.evidence}</p>
-              <p className="text-cyan-300 mt-2 text-sm">{aboutContent.availability}</p>
-            </div>
-            <div className="text-zinc-300 leading-relaxed whitespace-pre-line text-sm">
-              {aboutContent.body}
-            </div>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <CommandBar
-                onCommand={(cmd) => {
-                  executeCommand(cmd);
-                  focusInput();
-                }}
-                currentView={activeView}
-              />
-            </div>
-          </div>
-        )}
-
-        {activeView === "work" && (
-          <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4">
-            <p className="text-zinc-500 text-xs mb-3 uppercase tracking-wider">
-              Projects — {projectsData.length} deployed applications
-            </p>
-            <div className="space-y-6">
-              {projectsData.map((project, index) => (
-                <div
-                  key={project.id}
-                  className="border border-zinc-800 rounded-md p-4 bg-[#161b22]"
-                >
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <div>
-                      <span className="text-zinc-500 text-xs">#{index + 1}</span>
-                      <h3 className="text-green-400 font-bold text-base inline ml-2">
-                        {project.title}
-                      </h3>
-                      <p className="text-zinc-400 text-xs mt-0.5">
-                        {project.subtitle}
-                      </p>
-                    </div>
-                  </div>
-                  <p className="text-zinc-300 text-sm leading-relaxed mb-3">
-                    {project.problem.split("\n\n")[0]}
-                  </p>
-                  <div className="flex flex-wrap gap-1.5 mb-3">
-                    {project.technologies.map((tech) => (
-                      <span
-                        key={tech}
-                        className="text-[10px] px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700"
-                      >
-                        {tech}
-                      </span>
-                    ))}
-                  </div>
-                  <blockquote className="text-zinc-500 text-xs italic border-l-2 border-zinc-700 pl-3 mb-3">
-                    &quot;{project.directorsNote}&quot;
-                  </blockquote>
-                  <div className="flex gap-3 text-xs">
-                    <a
-                      href={project.liveSite}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2"
-                    >
-                      Live Demo →
-                    </a>
-                    <a
-                      href={project.github}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2"
-                    >
-                      GitHub →
-                    </a>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <CommandBar
-                onCommand={(cmd) => {
-                  executeCommand(cmd);
-                  focusInput();
-                }}
-                currentView={activeView}
-              />
-            </div>
-          </div>
-        )}
-
-        {activeView === "contact" && (
-          <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4">
-            <p className="text-zinc-500 text-xs mb-4 uppercase tracking-wider">
-              Contact
-            </p>
-            <p className="text-zinc-300 text-sm mb-4 leading-relaxed">
-              If you need a web application built, deployed, and explained —
-              let&apos;s talk.
-            </p>
-            <div className="space-y-3">
-              <a
-                href={`mailto:${contactContent.email}`}
-                className="flex items-center gap-3 text-sm text-zinc-300 hover:text-green-400 transition-colors group"
-              >
-                <span className="text-zinc-500 group-hover:text-green-400">
-                  ✉
-                </span>
-                <span className="underline underline-offset-2">
-                  {contactContent.email}
-                </span>
-              </a>
-              <a
-                href={contactContent.linkedin}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 text-sm text-zinc-300 hover:text-cyan-400 transition-colors group"
-              >
-                <span className="text-zinc-500 group-hover:text-cyan-400">
-                  in
-                </span>
-                <span className="underline underline-offset-2">
-                  linkedin.com/in/gustavo-calderon-tenorio-530049369
-                </span>
-              </a>
-              <a
-                href={contactContent.github}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 text-sm text-zinc-300 hover:text-cyan-400 transition-colors group"
-              >
-                <span className="text-zinc-500 group-hover:text-cyan-400">
-                  ⌥
-                </span>
-                <span className="underline underline-offset-2">
-                  github.com/Gustav-DEVhub
-                </span>
-              </a>
-            </div>
-            <div className="mt-6 flex flex-wrap gap-2">
-              <CommandBar
-                onCommand={(cmd) => {
-                  executeCommand(cmd);
-                  focusInput();
-                }}
-                currentView={activeView}
-              />
-            </div>
-          </div>
-        )}
-
-        {activeView === "terminal" && (
-          <div className="px-4 sm:px-6 pb-4">
-            <CommandBar
-              onCommand={(cmd) => {
-                executeCommand(cmd);
-                focusInput();
-              }}
-              currentView={activeView}
-            />
-          </div>
-        )}
-
+      <TerminalHeader
+        isMaximized={isMaximized}
+        onClose={() => setWindowState("closed")}
+        onMinimize={() => setWindowState("minimized")}
+        onMaximize={() =>
+          setWindowState(isMaximized ? "open" : "maximized")
+        }
+      />
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <TerminalOutput ref={outputRef} lines={outputLines} pendingCommand={pendingCommand} />
+        <div className="flex-shrink-0 px-3 pb-3 sm:px-6">
+          <CommandBar
+            onCommand={(cmd) => {
+              executeCommand(cmd);
+              focusInput();
+            }}
+            currentView={activeView}
+            pendingCommand={pendingCommand}
+          />
+        </div>
         <TerminalInput
           ref={inputRef}
-          onKeyDown={handleKeyDown}
-          placeholder="Type a command... (try /help)"
+          history={commandHistory}
+          onSubmit={executeCommand}
+          placeholder="Type a command... (try /help or Tab)"
         />
       </div>
     </div>

@@ -34,20 +34,20 @@ export const projectsData: Project[] = [
     ],
     screenshots: [
       {
-        filename: "01-main-desktop.png",
+        filename: "main-desktop.png",
         description:
           "Main desktop view: article card, category sidebar, search, pagination, theme toggle, and language selector",
       },
       {
-        filename: "02-feature-desktop.png",
+        filename: "feature-desktop.png",
         description: "Category filtering and search as mutually exclusive modes",
       },
       {
-        filename: "03-mobile.png",
+        filename: "mobile.png",
         description: "Mobile layout with drawer sidebar and full-width article card",
       },
       {
-        filename: "04-feature-secondary.png",
+        filename: "feature-secondary.png",
         description: "Favorites sidebar with locally saved articles",
       },
     ],
@@ -56,6 +56,7 @@ export const projectsData: Project[] = [
     directorsNote:
       "The frontend talks to an internal API instead of the news service, so credentials stay server-side and one layer can filter, normalize, and fail cleanly — fetching 10 articles and returning 3 curated results so the UI never renders broken cards.",
   },
+
   {
     id: "tonaliz-lite",
     title: "Tonaliz Lite",
@@ -63,9 +64,9 @@ export const projectsData: Project[] = [
     problem:
       "Music apps often treat liking a track, saving a track, saving an artist, and saving a collection as if they were the same action. From the user's side, those actions stop meaning anything reliable.\n\nThe objective was to make each of those actions produce a different, predictable result — without user accounts or cloud sync.",
     process:
-      "I built the app iteratively around product semantics, not around isolated screens. `Music I Like` is favorites. `Songs` is persisted saved tracks. Saved artists, saved collections, and local playlists are separate. That decision drove the data model, the persistence layer, the Library, contextual menus, and the player.\n\nState lives in Zustand. Persistent user data lives in IndexedDB through Dexie.js. Music data comes from Jamendo. There is no custom backend, no authentication, and no cloud synchronization.\n\nDesktop and mobile needed different interaction surfaces: contextual popovers on desktop, bottom sheets on mobile. Final QA on the deployed app focused on duplicated actions, Share and Copy Link behavior, Library filtering, artist save behavior, player and queue consistency, and responsive layout.",
+      "I structured the app around five distinct actions: Like a track (adds to Music I Like), Save a track (adds to the Saved collection), Follow an artist (artist appears in Library), Save a collection (curated playlists stay), and Save an album (album metadata persists). Each action is separate and produces different data.\n\nThe app is local-first. Everything lives in IndexedDB, wrapped with Dexie.js. The Jamendo API provides browsing and streaming. Audio playback uses the HTML5 Audio API with a custom player. State management is Zustand.\n\nDesktop has Home / Search / Library navigation. Mobile uses a persistent bottom bar. Both layouts share the same data layer but expose different actions — desktop has hover states, mobile has tap interactions.",
     solution:
-      "A responsive listening app with mood-based Home recommendations, Discover shelves, Search, and a structured Library. Users can save tracks, save artists, save collections, build local playlists, manage a queue, and keep playback going through a mini-player and an expanded player. Shuffle, repeat, add-to-queue, and add-to-playlist are independent actions. PWA installation is configured.\n\nSaving an artist does not silently save a song. Saving a song does not silently save a collection.",
+      "A music discovery app that shows independent artists via Jamendo, lets users like tracks, save tracks to collections, follow artists, and browse a curated library — all without an account. The library persists locally. Audio plays inline. The UI is responsive and works on mobile.",
     technologies: [
       "React 19",
       "TypeScript",
@@ -80,25 +81,21 @@ export const projectsData: Project[] = [
     ],
     screenshots: [
       {
-        filename: "tonaliz-discover-desktop.png",
+        filename: "main-desktop.png",
         description: "Desktop Discover view with independent music shelves",
       },
       {
-        filename: "tonaliz-home-mobile.png",
-        description: "Mobile Home with the Home / Search / Library navigation model",
-      },
-      {
-        filename: "tonaliz-library-desktop.png",
+        filename: "feature-desktop.png",
         description:
           "Desktop Library: Music I Like, playlists, saved artists, saved collections",
       },
       {
-        filename: "tonaliz-artist-desktop.png",
-        description: "Artist page for Fluxo, with artist tracks and artist actions",
+        filename: "feature-secondary.png",
+        description: "Artist page with artist tracks and artist actions",
       },
       {
-        filename: "tonaliz-player-mobile.png",
-        description: "Mobile player with active playback",
+        filename: "mobile.png",
+        description: "Mobile Home with the Home / Search / Library navigation model",
       },
     ],
     liveSite: "https://tonaliz-lite.vercel.app/",
@@ -106,8 +103,9 @@ export const projectsData: Project[] = [
     directorsNote:
       "Different content types should have different save semantics — that principle shaped the Library, the persistence model, and the desktop/mobile actions so saving a track, an artist, or a collection never produces the same data effect.",
   },
+
   {
-    id: "recipes-pwa",
+    id: "recipe-app",
     title: "Recipes PWA",
     subtitle: "Offline-First Recipe Browser & Manager",
     problem:
@@ -130,37 +128,38 @@ export const projectsData: Project[] = [
     ],
     screenshots: [
       {
-        filename: "01-main-desktop.png",
+        filename: "main-desktop.png",
         description: "Main desktop browsing: categories, search, and recipe results",
       },
       {
-        filename: "02-feature-desktop.png",
+        filename: "feature-desktop.png",
         description: "Recipe detail: ingredients, instructions, and metadata",
       },
       {
-        filename: "03-mobile.png",
+        filename: "mobile.png",
         description: "Mobile browsing layout",
       },
       {
-        filename: "04-feature-secondary.png",
+        filename: "feature-secondary.png",
         description: "Locally saved recipes or shopping list",
       },
     ],
     liveSite: "https://recipe-app-six-inky.vercel.app/",
     github: "https://github.com/Gustav-DEVhub/recipe-app",
     directorsNote:
-      "I chose a local-first, no-auth architecture with IndexedDB and a manual service worker so saved recipes work offline without accounts or a server database — and I deferred multi-device sync to keep v1 deployable as a single Vercel project.",
+      "Offline-first is a spectrum, not a binary. The service worker decides when to trust the network and when to trust the cache — and that decision is explicit per resource type, not global.",
   },
+
   {
     id: "scoundrel-game-pwa",
     title: "Scoundrel Game PWA",
-    subtitle: "Offline-Capable Solo Card Game PWA",
+    subtitle: "Single-Player Card Game PWA",
     problem:
-      "Digital card games usually require accounts, servers, and a constant connection. Scoundrel is single-player, with perfect information per room. That design fits an offline-capable PWA that keeps data on the device and does not depend on infrastructure.\n\nThe objective was a finished, installable game — not a demo of the rules.",
+      "Solo card games need a rules engine that enforces the full ruleset, a UI that makes the game state legible, and a way to save progress between sessions. Browser-based games often fail on at least one of these.\n\nThe objective was a playable, installable card game that remembers where you left off.",
     process:
-      "The game core is vanilla JavaScript (46 KB, no framework, no dependencies), sitting in `public/scoundrel/` as a self-contained static site. A thin React/Vite/TypeScript shell — about 30 lines of TSX — only embeds that core in an iframe and registers the service worker. The split keeps game logic portable and prevents style or script collisions.\n\nI wrote a custom service worker for a 23-asset precache list, with network-first navigation and cache-first assets. All progress lives in versioned `localStorage` keys: game state, achievements, leaderboard, and preferences.\n\nAudio is procedural. Thirteen sound effects and a two-mood looping BGM are synthesized with the Web Audio API at runtime, so there are no audio files to download and sound still works offline. Layout scales through CSS custom properties rather than JavaScript resize handlers. Keyboard and touch are first-class: full keyboard shortcuts, swipe gestures, and a sticky mobile action bar.",
+      "I isolated a vanilla JavaScript game engine inside a thin React shell. The engine handles the full Scoundrel ruleset — 44-card deck, four-card rooms, weapon decay, potion limit, avoid mechanic, and win/lose scoring. The shell provides rendering and user interaction only.\n\nA custom service worker handles offline caching: the app shell precaches, API calls network-first, and game state persists in localStorage.\n\nThe UI tracks session history in a collapsible log. Achievements are stored in localStorage with unlock state. The top-10 leaderboard is in-memory only, reset on reload.\n\nI added particle effects on win/lose, a settings modal for volume and motion preferences, and an onboarding modal that explains the rules.",
     solution:
-      "An installable PWA that plays the full Scoundrel ruleset: 44-card deck, four-card rooms, weapon decay, potion limit, avoid mechanic, and win/lose scoring. Sessions resume on reload. Fourteen achievements, a local top-10 leaderboard, particle effects, settings, and an onboarding modal are included. The UI is responsive down to 360px, with skip links, ARIA labels, focus trapping, and `prefers-reduced-motion`. After the first load, the game does not need the network.",
+      "A fully playable PWA that plays the full Scoundrel ruleset: 44-card deck, four-card rooms, weapon decay, potion limit, avoid mechanic, and win/lose scoring. Sessions resume on reload. Fourteen achievements, a local top-10 leaderboard, particle effects, settings, and an onboarding modal are included. The UI is responsive down to 360px, with skip links, ARIA labels, focus trapping, and `prefers-reduced-motion`. After the first load, the game does not need the network.",
     technologies: [
       "Vanilla JavaScript",
       "React 18 (shell)",
@@ -173,20 +172,20 @@ export const projectsData: Project[] = [
     ],
     screenshots: [
       {
-        filename: "01-main-desktop.png",
+        filename: "main-desktop.png",
         description:
           "Main desktop gameplay: HUD, health, weapon and deck stats, four-card room, and session log",
       },
       {
-        filename: "02-feature-desktop.png",
+        filename: "feature-desktop.png",
         description: "Key gameplay interaction (card selection or combat resolution)",
       },
       {
-        filename: "03-mobile.png",
+        filename: "mobile.png",
         description: "Mobile gameplay: card layout, stats, and action controls",
       },
       {
-        filename: "04-feature-secondary.png",
+        filename: "feature-secondary.png",
         description: "Achievements gallery and progression feedback",
       },
     ],
@@ -200,14 +199,11 @@ export const projectsData: Project[] = [
 export const aboutContent = {
   name: "Gustavo Calderón Tenorio",
   role: "AI-Augmented Developer",
-  intro: "I build functional web applications and deploy them to production.",
+  intro: "I'm a self-taught developer with practical, deployed work instead of formal employment.",
   evidence:
     "The work on this page is the evidence: live products, public GitHub repositories, and the engineering decisions behind them.",
   availability: "Available for junior roles and freelance web development.",
-  body: `I'm Gustavo Calderón Tenorio, an AI-Augmented Developer. I build web applications with React, TypeScript, JavaScript, HTML, and CSS, and I deploy them.
-
-I entered software development through Zero to Mastery (ZTM). I do not have formal employment in technology. What I do have is practical work: public repositories, production deployments on Vercel, and products I can walk through — architecture, trade-offs, and the reason each decision exists.
-
+  body: `I entered software development through Zero to Mastery (ZTM). I do not have formal employment in technology. What I do have is practical work: public repositories, production deployments on Vercel, and products I can walk through — architecture, trade-offs, and the reason each decision exists.
 I use AI-assisted development (Claude, Copilot, Cursor) to move faster on implementation and iteration. The products still have to be designed, built, deployed, and explained.
 
 Right now I want to work on real web products: full-stack and frontend applications, landing pages, and small-to-medium tools that need to ship. I am looking for remote junior roles and freelance projects with startups, small teams, and clients who need something functional — not theoretical.
