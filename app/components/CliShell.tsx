@@ -43,7 +43,8 @@ export default function CliShell() {
   const outputRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const lineCounter = useRef(0);
-  const loadingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loadingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const commandQueueRef = useRef<string[]>([]);
   const isProcessingRef = useRef(false);
   const processCommandRef = useRef<((trimmed: string) => void) | null>(null);
@@ -259,7 +260,10 @@ export default function CliShell() {
   );
 
   // Keep processCommandRef in sync with the latest processCommand function
-  processCommandRef.current = processCommand;
+
+  useEffect(() => {
+    processCommandRef.current = processCommand;
+  }, [processCommand]);
 
   const executeCommand = useCallback(
     (input: string) => {
