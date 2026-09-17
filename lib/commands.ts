@@ -1,10 +1,15 @@
 export const CLI_COMMANDS = [
   { cmd: "/help", hint: "Show available commands" },
   { cmd: "/about", hint: "About Gustavo" },
+  { cmd: "/skills", hint: "Show skills and tools" },
   { cmd: "/work", hint: "View deployed projects" },
   { cmd: "/contact", hint: "Email, LinkedIn, GitHub" },
   { cmd: "/github", hint: "Open GitHub profile" },
   { cmd: "/linkedin", hint: "Open LinkedIn profile" },
+  { cmd: "/themes", hint: "Change terminal theme" },
+  { cmd: "/dark", hint: "Set theme to default dark" },
+  { cmd: "/retro", hint: "Set theme to Retro CRT" },
+  { cmd: "/solarized", hint: "Set theme to Solarized Dark" },
   { cmd: "/clear", hint: "Clear terminal history" },
 ] as const;
 
@@ -13,10 +18,15 @@ export type CliCommand = (typeof CLI_COMMANDS)[number];
 export const SLASHLESS_COMMANDS = [
   "help",
   "about",
+  "skills",
   "work",
   "contact",
   "github",
   "linkedin",
+  "themes",
+  "dark",
+  "retro",
+  "solarized",
   "clear",
 ] as const;
 

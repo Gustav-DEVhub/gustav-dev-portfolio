@@ -9,6 +9,55 @@
   --accent-green: #50fa7b;
   --error: #ff5555;
   --muted: #6272a4;
+  --window-bg: #0d1117;
+  --window-border: #3f3f46;
+  --frame-bg: #161b22;
+  --frame-border: #27272a;
+  --body-text: #d4d4d4;
+  --error-text: #f87171;
+  --suggestion-selected-bg: #3f3f46;
+  --suggestion-selected-text: #f4f4f5;
+  --suggestion-hover-bg: #27272a;
+  --suggestion-secondary-text: #71717a;
+  --accent-subtitle: #a78bfa;
+  --frame-glow-color: rgba(167, 139, 250, 0.4);
+  --frame-glow-intensity: 18px;
+}
+
+[data-theme="retro"] {
+  --window-bg: #001a00;
+  --window-border: #0d3d0d;
+  --frame-bg: #002200;
+  --frame-border: #0d3d0d;
+  --body-text: #33ff33;
+  --accent-violet: #4ade80;
+  --accent: #86efac;
+  --accent-green: #33ff33;
+  --suggestion-selected-bg: #0d3d0d;
+  --suggestion-hover-bg: #062606;
+  --suggestion-secondary-text: #2ea043;
+  --suggestion-selected-text: #ccffcc;
+  --accent-subtitle: #ffb000;
+  --frame-glow-color: rgba(51, 255, 51, 0.45);
+  --frame-glow-intensity: 20px;
+}
+
+[data-theme="solarized"] {
+  --window-bg: #002b36;
+  --window-border: #073642;
+  --frame-bg: #073642;
+  --frame-border: #0a4552;
+  --body-text: #839496;
+  --accent-violet: #a0a3e0;
+  --accent: #268bd2;
+  --accent-green: #859900;
+  --suggestion-selected-bg: #586e75;
+  --suggestion-hover-bg: #0a4552;
+  --suggestion-secondary-text: #586e75;
+  --suggestion-selected-text: #fdf6e3;
+  --accent-subtitle: #e8720c;
+  --frame-glow-color: rgba(42, 161, 152, 0.4);
+  --frame-glow-intensity: 18px;
 }
 
 body {
@@ -22,13 +71,13 @@ body {
   font-family: "Press Start 2P", cursive;
 }
 
-/* Retro/pixel identity for Gustavo Calderón Tenorio */
+/* Retro/pixel identity for Gustavo Calderon Tenorio */
 .pixel-name {
   font-family: "Press Start 2P", cursive;
   font-weight: 400;
   letter-spacing: 0.02em;
   text-transform: uppercase;
-  color: var(--accent-violet);
+  color: var(--prompt);
   text-shadow:
     0 0 10px rgba(167, 139, 250, 0.45),
     0 0 20px rgba(167, 139, 250, 0.25),
@@ -61,7 +110,7 @@ body {
   font-size: clamp(0.5rem, 1.5vw, 0.75rem);
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--accent-violet);
+  color: var(--prompt);
   text-shadow:
     0 0 8px rgba(167, 139, 250, 0.35),
     0 0 16px rgba(167, 139, 250, 0.15);
@@ -69,12 +118,6 @@ body {
 
 /* Responsive adjustments */
 @media (max-width: 640px) {
-  .suggestion-menu button {
-    min-height: 48px;
-    padding-left: 12px;
-    padding-right: 12px;
-  }
-
   .pixel-name--hero {
     font-size: 0.95rem;
   }
@@ -82,6 +125,19 @@ body {
   .pixel-subtitle {
     font-size: 0.5rem;
   }
+}
+
+/* Phase 2i.1 — additive accent modifiers for the pixel identity classes.
+   Applied as an extra className on individual elements so the base rules
+   (and TerminatedScreen's "Session Terminated" heading, which must stay
+   --prompt purple this phase) remain untouched. Same specificity as the
+   base rules and later in this file, so they win by cascade order. */
+.pixel-name--accent {
+  color: var(--accent-subtitle);
+}
+
+.pixel-subtitle--accent {
+  color: var(--accent-subtitle);
 }
 
 /* Custom scrollbar for the terminal feel */
@@ -100,18 +156,21 @@ body {
   background: #6272a4;
 }
 
-/* Focus visible for accessibility */
-*:focus-visible {
-  outline: 2px solid var(--accent-violet);
-  outline-offset: 2px;
-}
-
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  .animate-pulse {
-    animation: none;
+/* Focus visible for accessibility.
+   Wrapped in @layer base (Tailwind v4 declares `theme, base, components,
+   utilities` order via the top-of-file import) so that any component's own
+   `outline-none` / `focus-visible:ring-*` utility — which lives in the
+   utilities layer — correctly wins where the author explicitly styled focus.
+   This rule remains the accessible fallback for every element that does not
+   opt out. Only this rule is layered; all other rules in this file stay
+   unlayered on purpose. */
+@layer base {
+  *:focus-visible {
+    outline: 2px solid var(--accent-violet);
+    outline-offset: 2px;
   }
 }
+
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   .animate-pulse {
@@ -157,6 +216,342 @@ body {
   .loading-dots span {
     animation: none;
     opacity: 1;
+  }
+}
+
+/* Terminal frame chrome — themed outer glow (all themes).
+   The glow is drawn by the frame element itself via box-shadow. An element's
+   own box-shadow is NEVER clipped by its own overflow-hidden (overflow only
+   clips descendants — a box-shadow on a child pseudo-element would be clipped,
+   but on the frame itself it renders outside the border box and follows the
+   rounded corners). The #main-content > div ID selector (specificity 1,0,1)
+   deterministically beats the .shadow-2xl utility (0,1,0) on the same element,
+   so the two never collide on the same box-shadow value. Using a plain
+   box-shadow also drops the old filter: drop-shadow() compositing group, which
+   could rasterize the frame and introduce a horizontal render seam on frames
+   that grow tall. */
+
+/* Positioning hook so the overlay pseudo-elements below anchor to the
+   frame itself. The frame element also carries the Tailwind `relative`
+   utility, so this is a belt-and-braces rule. Excluded when the frame is
+   fullscreen (.fixed) so Tailwind's fixed positioning keeps winning over
+   this ID rule (TerminalFrame emits `fixed` directly). */
+#main-content > div:not(.fixed) {
+  position: relative;
+}
+
+/* Themed outer border glow — all themes. box-shadow on the frame element is
+   painted outside its own border box, so overflow-hidden on the frame does
+   not clip it. The retro scanline/vignette pseudo-elements (z-index 20) sit
+   above the frame box via their own absolute stacking. */
+#main-content > div {
+  box-shadow: 0 0 var(--frame-glow-intensity) var(--frame-glow-color);
+}
+
+/* Retro CRT scanlines — static overlay, retro theme only.
+   In dark/solarized these selectors never match, so the pseudo-elements
+   are not generated at all (fully absent, no DOM overhead). */
+#main-content > div[data-theme="retro"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  border-radius: inherit;
+  /* Explicit background-size (100% x 4px) pins the tile to an exact whole
+     multiple of the repeating gradient's 4px period. Without it the browser
+     decides the tile geometry on its own, and as the frame grows with terminal
+     output the tiling can land on a fractional boundary — reproducing a
+     duplicated dark stripe / horizontal band mid-frame on /about etc. With the
+     period pinned the pattern tiles seamlessly at ANY frame height. */
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0px,
+    rgba(0, 0, 0, 0) 3px,
+    rgba(0, 0, 0, 0.25) 3px,
+    rgba(0, 0, 0, 0.25) 4px
+  );
+  background-size: 100% 4px;
+  background-repeat: repeat;
+}
+
+/* Retro CRT curvature/vignette — static overlay, retro theme only. */
+#main-content > div[data-theme="retro"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  border-radius: inherit;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0) 55%,
+    rgba(0, 0, 0, 0.45) 100%
+  );
+}
+
+/* Phase 2k.1-refine — Restrained technical exterior around the terminal.
+   Painted as background-image layers ON #main-content itself: backgrounds sit
+   beneath all children and never create stacking contexts, so the opaque
+   terminal window, boot frame, minimized bar, and fullscreen shell render
+   above it and the effect is visible only in the exterior area. Longhand
+   background-image only — the Tailwind `bg-black` background-color on this
+   element must survive (never use the `background` shorthand here).
+
+   Three stacked layers, all static (no animation, no blend modes, no assets):
+
+   1. Structural grid — 48px pitch, 1px hairlines, NO intersection dots.
+      Reads as quiet structure, not a checkerboard.
+   2. Peripheral circuit traces — exactly three sparse, asymmetric 2px
+      L-shaped traces pinned near the edges/corners (top-left, bottom-right,
+      a short drop at top-right), each with one small endpoint pad. Same
+      geometry in every theme; only the ink color changes.
+   3. Soft field — a wide, faint radial wash centered on the terminal,
+      deepest layer, acting as depth rather than a glow object.
+
+   Ink colors are theme-swapped via four custom properties declared here and
+   re-declared by the :has() blocks below. This works because those selectors
+   match main ITSELF — the properties are set on the same element that draws
+   the background, so nothing needs to inherit upward (the 2k.0 limitation
+   that forced literal per-theme gradients no longer applies). The rgba
+   values mirror the established palettes (dark: --accent-violet #a78bfa;
+   retro: --accent-green #33ff33; solarized: teal rgb(42, 161, 152) from
+   --frame-glow-color). Alphas stay far below the CRT overlay range so the
+   exterior still reads primarily as the dark page. */
+
+#main-content {
+  /* Exterior ink (theme-swapped by the :has() blocks below). */
+  --exterior-grid: rgba(167, 139, 250, 0.04);
+  --exterior-trace: rgba(167, 139, 250, 0.06);
+  --exterior-node: rgba(167, 139, 250, 0.1);
+  --exterior-aura: rgba(167, 139, 250, 0.07);
+  background-image:
+    /* Trace A — top-left: endpoint pad, 140px run right, 88px drop down. */
+    radial-gradient(
+      circle,
+      var(--exterior-node) 0px,
+      var(--exterior-node) 3px,
+      rgba(0, 0, 0, 0) 3px
+    ),
+    linear-gradient(
+      to bottom,
+      var(--exterior-trace) 2px,
+      rgba(0, 0, 0, 0) 2px
+    ),
+    linear-gradient(
+      to right,
+      var(--exterior-trace) 2px,
+      rgba(0, 0, 0, 0) 2px
+    ),
+    /* Trace B — bottom-right: endpoint pad, 160px run left, 88px rise up. */
+    radial-gradient(
+      circle,
+      var(--exterior-node) 0px,
+      var(--exterior-node) 3px,
+      rgba(0, 0, 0, 0) 3px
+    ),
+    linear-gradient(
+      to bottom,
+      var(--exterior-trace) 2px,
+      rgba(0, 0, 0, 0) 2px
+    ),
+    linear-gradient(
+      to right,
+      var(--exterior-trace) 2px,
+      rgba(0, 0, 0, 0) 2px
+    ),
+    /* Trace C — top-right: endpoint pad, short 72px drop down. */
+    radial-gradient(
+      circle,
+      var(--exterior-node) 0px,
+      var(--exterior-node) 3px,
+      rgba(0, 0, 0, 0) 3px
+    ),
+    linear-gradient(
+      to right,
+      var(--exterior-trace) 2px,
+      rgba(0, 0, 0, 0) 2px
+    ),
+    /* Structural grid — 48px pitch, no dots. */
+    linear-gradient(
+      to right,
+      var(--exterior-grid) 1px,
+      rgba(0, 0, 0, 0) 1px
+    ),
+    linear-gradient(
+      to bottom,
+      var(--exterior-grid) 1px,
+      rgba(0, 0, 0, 0) 1px
+    ),
+    /* Soft field — deepest layer, depth behind the terminal. */
+    radial-gradient(
+      ellipse 62% 55% at 50% 50%,
+      var(--exterior-aura) 0%,
+      rgba(0, 0, 0, 0) 72%
+    );
+  background-position:
+    left 68px top 52px,
+    left 72px top 55px,
+    left 210px top 55px,
+    right 60px bottom 68px,
+    right 64px bottom 71px,
+    right 222px bottom 71px,
+    right 116px top 64px,
+    right 119px top 66px,
+    0 0,
+    0 0,
+    0 0;
+  background-size:
+    8px 8px,
+    140px 2px,
+    2px 88px,
+    8px 8px,
+    160px 2px,
+    2px 88px,
+    8px 8px,
+    2px 72px,
+    48px 48px,
+    48px 48px,
+    100% 100%;
+  background-repeat:
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    repeat,
+    repeat,
+    no-repeat;
+}
+
+/* Retro CRT — green exterior ink (identical geometry to the base rule; only
+   the theme-swapped ink colors change). Active only while the shell carries
+   data-theme="retro"; boot/closed/minimized fall back to the dark ink above,
+   matching those surfaces' fixed-color presentation. */
+#main-content:has(> [data-theme="retro"]) {
+  --exterior-grid: rgba(51, 255, 51, 0.045);
+  --exterior-trace: rgba(51, 255, 51, 0.065);
+  --exterior-node: rgba(51, 255, 51, 0.11);
+  --exterior-aura: rgba(51, 255, 51, 0.075);
+}
+
+/* Solarized Dark — teal exterior ink (identical geometry; ink colors only). */
+#main-content:has(> [data-theme="solarized"]) {
+  --exterior-grid: rgba(42, 161, 152, 0.05);
+  --exterior-trace: rgba(42, 161, 152, 0.07);
+  --exterior-node: rgba(42, 161, 152, 0.12);
+  --exterior-aura: rgba(42, 161, 152, 0.08);
+}
+
+/* Translucent terminal surfaces — lets the exterior grid/traces/aura above show
+   faintly THROUGH the closed (TerminatedScreen), minimized bar, and floating
+   (non-maximized) shell, so the terminal reads as sitting in the same
+   environment instead of on top of it.
+
+   Only an alpha channel is added: every rgb() triple below is the exact
+   --window-bg hex for that theme (dark #0d1117, retro #001a00, solarized
+   #002b36), so the hue is untouched and just ~7% of the exterior layers bleed
+   through. The alpha stays high so body text, chrome, and buttons remain fully
+   legible; it is the single knob to tune (lower = pattern more present).
+
+   Exclusions in the :not() chain, all without any TSX change:
+     .fixed          — maximized/fullscreen shell stays 100% opaque. Same
+                       "fullscreen, do-not-touch" marker the positioning hook
+                       at the top of this block already relies on.
+     .cursor-pointer — the boot frame is out of scope. BootSequence is the only
+                       caller that passes cursor-pointer to TerminalFrame, which
+                       makes it the one direct child that can be excluded this
+                       way; the boot frame keeps its opaque #0d1117.
+     [aria-hidden]   — pre-hydration placeholders (page.tsx SSR fallback and
+                       BootSequence's SSR placeholder) carry no background
+                       today; leaving them alone avoids a phantom dark panel
+                       flashing before hydration.
+
+   These rules are unlayered author CSS, so they beat Tailwind's layered
+   utilities regardless of specificity and override the bg-[#0d1117] /
+   bg-[var(--window-bg)] classes on those roots. */
+#main-content > div:not(.fixed):not(.cursor-pointer):not([aria-hidden="true"]) {
+  background-color: rgb(13 17 23 / 0.93);
+}
+
+/* Retro CRT — same override using the retro --window-bg (#001a00). Active only
+   while the shell carries data-theme="retro", mirroring the exterior-ink
+   blocks; closed/minimized/boot fall back to the dark value above (those
+   surfaces are already fixed dark today). */
+#main-content:has(> [data-theme="retro"])
+  > div:not(.fixed):not(.cursor-pointer):not([aria-hidden="true"]) {
+  background-color: rgb(0 26 0 / 0.93);
+}
+
+/* Solarized Dark — same override using the solarized --window-bg (#002b36). */
+#main-content:has(> [data-theme="solarized"])
+  > div:not(.fixed):not(.cursor-pointer):not([aria-hidden="true"]) {
+  background-color: rgb(0 43 54 / 0.93);
+}
+
+/* Phase 2l.1 — window transition animations (CSS foundation only; the wiring
+   in CliShell.tsx lands in the next phase). Three primitives, opacity and
+   transform ONLY — never `transition-all`, so no other property is animated.
+   1. .window-enter        — fade-in on mount. Uses `animation` (transitions do
+                             not auto-play on mount), 180ms ease-out.
+   2. .window-resize-pop   — open <-> maximized scale pop. Uses a `transition`
+                             (toggled on/off by a className change, not mount),
+                             150ms ease-out, resting scale 1.02 -> 1.
+   3. .window-exit         — collapse before unmount: opacity 0 / scale 0.95 over
+                             180ms. Two origin variants aim the collapse at the
+                             traffic-light buttons (top-left of the chrome):
+                             22px / 42px are the approximate centres of the red
+                             (close) and yellow (minimize) dots in px terms —
+                             padding-anchored, so they hold across the mobile/sm
+                             dot sizes; tunable if the visual pull needs it. */
+@keyframes window-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.window-enter {
+  animation: window-fade-in 180ms ease-out both;
+}
+
+.window-resize-pop {
+  transform: scale(1.02);
+  transition: transform 150ms ease-out;
+}
+
+.window-exit {
+  opacity: 0;
+  transform: scale(0.95);
+  transition: opacity 180ms ease-out, transform 180ms ease-out;
+}
+
+.window-exit-to-close {
+  transform-origin: 22px 18px;
+}
+
+.window-exit-to-minimize {
+  transform-origin: 42px 18px;
+}
+
+/* Reduced motion — skip the window motion entirely: enter paints immediately,
+   resize/resize-pop does not scale, and exit stays put until JS unmounts it
+   (so no invisible gap appears). Same precedent as the loader animations. */
+@media (prefers-reduced-motion: reduce) {
+  .window-enter {
+    animation: none;
+  }
+
+  .window-resize-pop {
+    transform: none;
+    transition: none;
+  }
+
+  .window-exit {
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
 }
 

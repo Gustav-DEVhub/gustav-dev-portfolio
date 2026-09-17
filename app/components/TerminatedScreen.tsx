@@ -12,7 +12,7 @@ export function TerminatedScreen({ onReopen }: TerminatedScreenProps) {
         <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
         <span className="h-3 w-3 rounded-full bg-[#27c93f]" />
       </div>
-      <h2 className="pixel-name text-xl tracking-tight text-zinc-100">
+      <h2 className="pixel-name pixel-name--accent text-xl tracking-tight text-zinc-100">
         Session Terminated
       </h2>
       <p className="max-w-md text-sm text-zinc-400">

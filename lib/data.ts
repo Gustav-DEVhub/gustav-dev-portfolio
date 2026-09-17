@@ -197,20 +197,60 @@ export const projectsData: Project[] = [
 ];
 
 export const aboutContent = {
-  name: "Gustavo Calderón Tenorio",
   role: "AI-Augmented Developer",
-  intro: "I'm a self-taught developer with practical, deployed work instead of formal employment.",
+  intro: "I'm a self-taught developer working as an AI-Augmented Developer — practical, deployed work instead of formal employment.",
   evidence:
     "The work on this page is the evidence: live products, public GitHub repositories, and the engineering decisions behind them.",
   availability: "Available for junior roles and freelance web development.",
-  body: `I entered software development through Zero to Mastery (ZTM). I do not have formal employment in technology. What I do have is practical work: public repositories, production deployments on Vercel, and products I can walk through — architecture, trade-offs, and the reason each decision exists.
-I use AI-assisted development (Claude, Copilot, Cursor) to move faster on implementation and iteration. The products still have to be designed, built, deployed, and explained.
+  location: "Based in Peru (UTC-5) — Available for Remote Work & Relocation",
+  sections: [
+    {
+      subtitle: "How I got here",
+      paragraphs: [
+        "I entered software development through Zero to Mastery (ZTM). I do not have formal employment in technology. What I do have is practical work: public repositories, production deployments on Vercel, and the reason each decision exists.",
+        "I use AI-assisted development, routed through multiple model providers, to move faster on implementation and iteration. The products still have to be designed, built, deployed, and explained.",
+      ],
+      bullets: [] as string[],
+    },
+    {
+      subtitle: "What I'm looking for now",
+      paragraphs: [] as string[],
+      bullets: [
+        "Full-stack and frontend web applications",
+        "Landing pages and small-to-medium tools that need to ship",
+        "Remote junior roles and freelance projects",
+        "Startups, small teams, and clients who need something functional — not theoretical",
+      ],
+    },
+    {
+      subtitle: "What's next",
+      paragraphs: [
+        "Over the medium term I am studying toward AI Engineering as part of my ZTM path. That is a direction. It is not my current role.",
+      ],
+      bullets: [] as string[],
+    },
+  ],
+  closing: [
+    "I am ready to work. The evidence is above.",
+    "Type /contact to get in touch or /work to see my projects.",
+  ],
+};
 
-Right now I want to work on real web products: full-stack and frontend applications, landing pages, and small-to-medium tools that need to ship. I am looking for remote junior roles and freelance projects with startups, small teams, and clients who need something functional — not theoretical.
-
-Over the medium term I am studying toward Data Engineering as part of my ZTM path. That is a direction. It is not my current role.
-
-I am ready to work. The evidence is above.`,
+export const skillsContent = {
+  capabilities: [
+    "Full-stack app development — frontend + backend, end-to-end",
+    "Deployment to production (Vercel) · version control (GitHub)",
+    "API and third-party service integration",
+    "AI-assisted development with a self-built workflow, not tied to a single provider",
+  ],
+  tools: {
+    "Frontend":
+      "React · TypeScript · Next.js · JavaScript · HTML / CSS · Tailwind",
+    "Backend & Data":
+      "Node.js · Express\nPython (fundamentals — loops, functions, logical operators, scope, and ongoing learning)",
+    "AI Workflow":
+      "Cline (VS Code agent interface) · OpenRouter (multi-provider model routing)",
+  },
 };
 
 export const contactContent = {
@@ -221,12 +261,15 @@ export const contactContent = {
 
 export const heroContent = `I build real products, deploy them, and can explain the engineering and product decisions behind them.`;
 
-export const helpText = `Available commands:
-  /about      - Learn about Gustavo
+export const helpHeader = "Available commands:";
+
+export const helpText = `  /about      - Learn about Gustavo
+  /skills     - Show skills and tools
   /work       - View projects
   /contact    - Get in touch
   /github     - Open GitHub profile in a new tab
   /linkedin   - Open LinkedIn profile in a new tab
+  /themes     - Change terminal theme
   /clear      - Clear the terminal screen
   /help       - Show this help message`;
 

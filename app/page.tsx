@@ -1,6 +1,53 @@
+"use client";
+
+import { useState, useSyncExternalStore } from "react";
 import CliShell from "@/app/components/CliShell";
+import { BootSequence } from "@/app/components/BootSequence";
+
+const BOOT_FLAG_KEY = "portfolio_booted";
+
+// React 19 / Next.js hydration-safe client detection
+const emptySubscribe = () => () => {};
+const useIsClient = () => useSyncExternalStore(emptySubscribe, () => true, () => false);
+
+// Read sessionStorage reactively per-tab (SSR-safe: returns false until client mount)
+function useSessionBootFlag(): boolean {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => {
+      if (typeof window === "undefined") return false;
+      try {
+        return window.sessionStorage.getItem(BOOT_FLAG_KEY) === "true";
+      } catch {
+        return false;
+      }
+    },
+    () => false
+  );
+}
 
 export default function Home() {
+  const isClient = useIsClient();
+  const sessionBooted = useSessionBootFlag();
+  // Local "completed this session" flag — set by the event handler below
+  // (avoids calling setState inside useEffect)
+  const [hasBooted, setHasBooted] = useState(false);
+
+  // Combine: either the sessionStorage flag is set (came back to the tab),
+  // or the user just completed the sequence in this tab.
+  const booted = sessionBooted || hasBooted;
+
+  const handleBootComplete = () => {
+    if (typeof window !== "undefined") {
+      try {
+        window.sessionStorage.setItem(BOOT_FLAG_KEY, "true");
+      } catch {
+        // Ignore storage errors
+      }
+    }
+    setHasBooted(true);
+  };
+
   return (
     <>
       {/* Skip to main content link for accessibility */}
@@ -15,12 +62,22 @@ export default function Home() {
         <h1>Gustavo Portfolio</h1>
       </header>
 
-      <main id="main-content" className="flex h-[100dvh] w-[100dvw] items-start justify-center overflow-hidden bg-black">
-        <CliShell />
+      <main
+        id="main-content"
+        className="flex min-h-screen w-full items-center justify-center overflow-hidden bg-black p-4 sm:p-6 md:p-8"
+      >
+        {/* SSR fallback: render nothing inside the slot until hydration completes */}
+        {!isClient ? (
+          <div className="min-h-screen w-full" aria-hidden="true" />
+        ) : booted ? (
+          <CliShell />
+        ) : (
+          <BootSequence onComplete={handleBootComplete} />
+        )}
       </main>
 
       <footer className="sr-only">
-        <p>Portfolio by Gustavo Calderón Tenorio - AI-Augmented Developer</p>
+        <p>Portfolio by Gustavo Calderon Tenorio - AI-Augmented Developer</p>
       </footer>
     </>
   );
