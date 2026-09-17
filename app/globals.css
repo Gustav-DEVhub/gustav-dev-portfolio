@@ -129,9 +129,12 @@ body {
 
 /* Phase 2i.1 — additive accent modifiers for the pixel identity classes.
    Applied as an extra className on individual elements so the base rules
-   (and TerminatedScreen's "Session Terminated" heading, which must stay
-   --prompt purple this phase) remain untouched. Same specificity as the
-   base rules and later in this file, so they win by cascade order. */
+   remain untouched. Elements that use these modifiers (including
+   TerminatedScreen's "Session Terminated" heading, which pairs
+   .pixel-name with .pixel-name--accent) resolve their color through the
+   themed --accent-subtitle variable instead of the fixed --prompt purple.
+   Same specificity as the base rules and later in this file, so they win
+   by cascade order. */
 .pixel-name--accent {
   color: var(--accent-subtitle);
 }
