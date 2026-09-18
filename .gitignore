@@ -20,6 +20,9 @@
 # production
 /build
 
+# Personal reference docs, not part of the app
+/docs/
+
 # misc
 .DS_Store
 *.pem
