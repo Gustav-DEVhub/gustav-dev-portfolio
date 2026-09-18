@@ -263,7 +263,7 @@ export const heroContent = `I build real products, deploy them, and can explain 
 
 export const helpHeader = "Available commands:";
 
-export const helpText = `  /about      - Learn about Gustavo
+export const helpText = `  /about      - Learn about Gustav
   /skills     - Show skills and tools
   /work       - View projects
   /contact    - Get in touch
@@ -273,7 +273,7 @@ export const helpText = `  /about      - Learn about Gustavo
   /clear      - Clear the terminal screen
   /help       - Show this help message`;
 
-export const welcomeMessage = `Welcome to Gustavo's interactive terminal.
+export const welcomeMessage = `Welcome to Gustav's interactive terminal.
 
 Type /help to see available commands, or use the buttons below.
 This portfolio is fully usable without typing — just click.`;

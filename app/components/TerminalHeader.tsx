@@ -56,7 +56,7 @@ export function TerminalHeader({
 
       <div className="min-w-0 flex-1 text-center">
         <p className="hidden text-[10px] tracking-wide text-zinc-500 sm:block">
-          gustavo@portfolio ~ %
+          gustav@tenorio ~ /portfolio
         </p>
       </div>
       <div className="w-11 sm:w-14" />

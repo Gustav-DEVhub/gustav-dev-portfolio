@@ -530,7 +530,7 @@ export default function CliShell() {
             </button>
           </div>
           <p className="hidden text-[10px] tracking-wide text-zinc-500 sm:block">
-            gustavo@portfolio ~ %
+            gustav@tenorio ~ /portfolio
           </p>
         </div>
 
@@ -571,7 +571,7 @@ export default function CliShell() {
       {/* Dominant Pixelated Header */}
       <div className="flex-shrink-0 border-b border-zinc-800 bg-[#0d1117] px-4 py-3 sm:px-6 sm:py-4">
         <p className="pixel-name pixel-name--hero pixel-name--accent text-center sm:text-left">
-          Gustavo Calderon Tenorio
+          Gustav Calderon Tenorio
         </p>
         <p className="pixel-subtitle pixel-subtitle--accent mt-1 text-center sm:text-left">
           AI-Augmented Developer

@@ -1,6 +1,6 @@
 export const CLI_COMMANDS = [
   { cmd: "/help", hint: "Show available commands" },
-  { cmd: "/about", hint: "About Gustavo" },
+  { cmd: "/about", hint: "About Gustav" },
   { cmd: "/skills", hint: "Show skills and tools" },
   { cmd: "/work", hint: "View deployed projects" },
   { cmd: "/contact", hint: "Email, LinkedIn, GitHub" },

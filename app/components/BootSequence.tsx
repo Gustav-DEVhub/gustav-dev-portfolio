@@ -18,7 +18,7 @@ const BOOT_LINES: string[] = [
   "PROGRESS::",
   "SYS:: Resolving case studies & architecture...",
   "SYS:: Strategic positioning: AI-Augmented Developer",
-  "\u2605 gustavo.dev v1.0.0 \u2014 ready.",
+  "\u2605 gustav.tenorio v1.0.0 \u2014 ready.",
   "PROMPT::",
 ];
 

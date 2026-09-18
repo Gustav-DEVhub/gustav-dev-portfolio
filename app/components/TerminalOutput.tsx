@@ -101,7 +101,7 @@ function HeroBlock() {
           </div>
           <div className="flex items-start gap-2">
             <span className="shrink-0 font-mono text-xs text-[var(--accent-violet)]">/about</span>
-            <span className="font-mono text-xs text-zinc-400">— About Gustavo</span>
+            <span className="font-mono text-xs text-zinc-400">— About Gustav</span>
           </div>
           <div className="flex items-start gap-2">
             <span className="shrink-0 font-mono text-xs text-[var(--accent-violet)]">/skills</span>
@@ -140,7 +140,7 @@ function AboutBlock() {
   return (
     <div className="mb-2">
       <h3 className="font-mono text-base font-bold text-[var(--accent-subtitle)]">
-        About Gustavo Calderon Tenorio
+        About Gustav Calderon Tenorio
       </h3>
       <p className="mt-3 leading-relaxed text-[var(--body-text)]">{aboutContent.intro}</p>
       <p className="mt-2 text-sm italic text-zinc-400">{aboutContent.evidence}</p>

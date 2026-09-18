@@ -59,7 +59,7 @@ export default function Home() {
       </a>
 
       <header className="sr-only">
-        <h1>Gustavo Portfolio</h1>
+        <h1>Gustav Portfolio</h1>
       </header>
 
       <main
@@ -77,7 +77,7 @@ export default function Home() {
       </main>
 
       <footer className="sr-only">
-        <p>Portfolio by Gustavo Calderon Tenorio - AI-Augmented Developer</p>
+        <p>Portfolio by Gustav Calderon Tenorio - AI-Augmented Developer</p>
       </footer>
     </>
   );

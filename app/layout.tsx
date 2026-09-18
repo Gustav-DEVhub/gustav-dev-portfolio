@@ -19,9 +19,9 @@ const pressStart = Press_Start_2P({
 });
 
 export const metadata: Metadata = {
-  title: "Gustavo Calderon Tenorio | AI-Augmented Developer",
+  title: "Gustav Calderon Tenorio | AI-Augmented Developer",
   description:
-    "Portfolio of Gustavo Calderon Tenorio, an AI-Augmented Developer building real, functional web applications with React, Next.js, TypeScript, and AI tools. Based in Peru (UTC-5) — available for remote work and relocation.",
+    "Portfolio of Gustav Calderon Tenorio, an AI-Augmented Developer building real, functional web applications with React, Next.js, TypeScript, and AI tools. Based in Peru (UTC-5) — available for remote work and relocation.",
   keywords: [
     "AI-Augmented Developer",
     "Web Development",
@@ -33,9 +33,9 @@ export const metadata: Metadata = {
     "Junior Developer",
     "Freelance",
   ],
-  authors: [{ name: "Gustavo Calderon Tenorio" }],
+  authors: [{ name: "Gustav Calderon Tenorio" }],
   openGraph: {
-    title: "Gustavo Calderon Tenorio | AI-Augmented Developer",
+    title: "Gustav Calderon Tenorio | AI-Augmented Developer",
     description:
       "Functional web applications built with React, Next.js, TypeScript, and AI tools. Based in Peru (UTC-5) — available for remote work and relocation.",
     type: "website",
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary",
-    title: "Gustavo Calderon Tenorio | AI-Augmented Developer",
+    title: "Gustav Calderon Tenorio | AI-Augmented Developer",
     description:
       "Functional web applications built with React, Next.js, TypeScript, and AI tools. Based in Peru (UTC-5) — available for remote work and relocation.",
   },

@@ -18,7 +18,7 @@ interface TerminalFrameProps {
 /**
  * Shared outer terminal window frame used by both the boot sequence and the
  * active CLI shell. Renders the standard rounded card, dark background, macOS
- * traffic-light dots, and "gustavo@portfolio ~ %" header.
+ * traffic-light dots, and "gustav@tenorio ~ /portfolio" header.
  *
  * The same outer dimensions are used for both states so the transition
  * between boot and shell produces zero layout shift.
@@ -76,7 +76,7 @@ function ReadOnlyTerminalHeader() {
       </div>
       <div className="min-w-0 flex-1 text-center">
         <p className="hidden text-[10px] tracking-wide text-zinc-500 sm:block">
-          gustavo@portfolio ~ %
+          gustav@tenorio ~ /portfolio
         </p>
       </div>
       <div className="w-12 sm:w-16" aria-hidden="true" />
