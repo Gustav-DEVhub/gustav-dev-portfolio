@@ -7,6 +7,7 @@ import { TerminalInput } from "./TerminalInput";
 import { TerminalOutput } from "./TerminalOutput";
 import { TerminatedScreen } from "./TerminatedScreen";
 import { normalizeCommand } from "@/lib/commands";
+import { useIsMobile } from "@/app/hooks/useIsMobile";
 import {
   contactContent,
   helpHeader,
@@ -54,7 +55,23 @@ export default function CliShell() {
   const [activeView, setActiveView] = useState<ActiveView>("terminal");
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState("");
-  const [windowState, setWindowState] = useState<WindowState>("open");
+  // Phase 2m — mobile viewport policy. Below the `sm` breakpoint (640px, the
+  // same breakpoint used throughout the app) the floating "open" state is a
+  // desktop-only concept: every path that would enter "open" resolves to
+  // "maximized" instead — the initial load through this lazy default, and the
+  // terminated-screen reopen / minimized-bar yellow / title-bar green toggle
+  // through their isMobile ternaries at the call sites below.
+  //
+  // `useIsMobile` is SSR-safe (server snapshot `false`) and CliShell is mounted
+  // client-only (page.tsx gates it behind its isClient flag), so the first
+  // client render already sees the real viewport: no floating state ever
+  // paints on mobile, and no post-mount correction is required. Deliberately
+  // not a mount effect — `react-hooks/set-state-in-effect` forbids synchronous
+  // setState in an effect body, and a deferred correction would flash.
+  const isMobile = useIsMobile();
+  const [windowState, setWindowState] = useState<WindowState>(
+    () => (isMobile ? "maximized" : "open")
+  );
   const [pendingCommand, setPendingCommand] = useState<string | null>(null);
   const [theme, setTheme] = useState<ThemeId>("dark");
   // Phase 2l.2 — transient flag for the open <-> maximized scale pop. Kept
@@ -476,7 +493,7 @@ export default function CliShell() {
   }, [windowState, focusInput]);
 
   if (windowState === "closed") {
-    return <TerminatedScreen onReopen={() => setWindowState("open")} />;
+    return <TerminatedScreen onReopen={() => setWindowState(isMobile ? "maximized" : "open")} />;
   }
 
   if (windowState === "minimized") {
@@ -511,7 +528,7 @@ export default function CliShell() {
               className="flex h-11 w-11 items-center justify-center sm:h-auto sm:w-auto"
               onClick={(event) => {
                 event.stopPropagation();
-                setWindowState("open");
+                setWindowState(isMobile ? "maximized" : "open");
               }}
             >
               <span className="h-3.5 w-3.5 rounded-full bg-[#febc2e] shadow-[0_0_8px_rgba(254,188,46,0.45)] hover:brightness-110 sm:h-3 sm:w-3" />
@@ -543,7 +560,7 @@ export default function CliShell() {
             value={inputValue}
             onChange={setInputValue}
             onSubmit={(command) => {
-              setWindowState("open");
+              setWindowState(isMobile ? "maximized" : "open");
               executeCommand(command);
             }}
             placeholder="Type a command... (try /help or Tab)"
@@ -568,22 +585,16 @@ export default function CliShell() {
       }`}
       onClick={focusInput}
     >
-      {/* Dominant Pixelated Header */}
-      <div className="flex-shrink-0 border-b border-zinc-800 bg-[#0d1117] px-4 py-3 sm:px-6 sm:py-4">
-        <p className="pixel-name pixel-name--hero pixel-name--accent text-center sm:text-left">
-          Gustav Calderon Tenorio
-        </p>
-        <p className="pixel-subtitle pixel-subtitle--accent mt-1 text-center sm:text-left">
-          AI-Augmented Developer
-        </p>
-      </div>
-
       <TerminalHeader
         isMaximized={isMaximized}
         onClose={() => requestExit("closed", "window-exit-to-close")}
         onMinimize={() => requestExit("minimized", "window-exit-to-minimize")}
         onMaximize={() => {
-          setWindowState(isMaximized ? "open" : "maximized");
+          // Phase 2m — mobile has no floating "open" state: green always
+          // maximizes there (re-clicking while already maximized just re-sets
+          // the same value — a harmless no-op). Desktop keeps the exact
+          // open <-> maximized toggle unchanged.
+          setWindowState(isMobile || !isMaximized ? "maximized" : "open");
           setIsResizePopping(true);
           if (resizePopTimerRef.current) clearTimeout(resizePopTimerRef.current);
           resizePopTimerRef.current = setTimeout(() => {
@@ -592,6 +603,13 @@ export default function CliShell() {
           }, 150);
         }}
       />
+
+      {/* Dominant Pixelated Header */}
+      <div className="flex-shrink-0 border-b border-zinc-800 bg-[#0d1117] px-4 py-3 sm:px-6 sm:py-4">
+        <p className="pixel-name pixel-name--hero pixel-name--accent text-center sm:text-left">
+          Gustav Calderon Tenorio
+        </p>
+      </div>
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <TerminalOutput
           ref={outputRef}

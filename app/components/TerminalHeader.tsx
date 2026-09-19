@@ -14,7 +14,7 @@ export function TerminalHeader({
   onMaximize,
 }: TerminalHeaderProps) {
   return (
-    <div className="flex items-center gap-2 border-b border-zinc-800 bg-[#161b22] px-3 py-2.5 select-none sm:px-4 sm:py-3">
+    <div className="flex items-center gap-1 border-b border-zinc-800 bg-[#161b22] px-2 py-2.5 select-none sm:gap-2 sm:px-4 sm:py-3">
       <div className="mr-1 flex items-center gap-1 sm:mr-3 sm:gap-2">
         <button
           type="button"
@@ -55,11 +55,11 @@ export function TerminalHeader({
       </div>
 
       <div className="min-w-0 flex-1 text-center">
-        <p className="hidden text-[10px] tracking-wide text-zinc-500 sm:block">
+        <p className="block text-[8px] text-zinc-500 sm:text-[10px] sm:tracking-wide">
           gustav@tenorio ~ /portfolio
         </p>
       </div>
-      <div className="w-11 sm:w-14" />
+      <div className="w-4 sm:w-14" />
     </div>
   );
 }
