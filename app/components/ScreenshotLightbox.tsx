@@ -290,6 +290,10 @@ export function ScreenshotLightbox({
               panStart.current = null;
               return;
             }
+            // A press that starts on a button (e.g. the prev/next arrows) must not start a
+            // pan/drag gesture or capture the pointer — otherwise the container steals the
+            // derived click/dblclick stream from the button and it never fires.
+            if ((event.target as Element).closest("button")) return;
             activePointerId.current = event.pointerId;
             pointerStartX.current = event.clientX;
             pointerStartY.current = event.clientY;
@@ -395,7 +399,8 @@ export function ScreenshotLightbox({
                   event.stopPropagation();
                   goToPrevious();
                 }}
-                className="absolute left-2 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded bg-[var(--frame-bg)]/60 bg-black/40 font-mono text-lg text-[var(--body-text)] transition-colors hover:bg-[var(--frame-bg)] hover:text-[var(--accent-violet)] sm:left-3 sm:top-1/2 sm:-translate-y-1/2"
+                onDoubleClick={(event) => event.stopPropagation()}
+                className="absolute left-2 top-1/2 -translate-y-1/2 z-10 flex h-11 w-11 items-center justify-center rounded bg-[var(--frame-bg)]/60 bg-black/40 font-mono text-lg text-[var(--body-text)] transition-colors hover:bg-[var(--frame-bg)] hover:text-[var(--accent-violet)] sm:left-3 sm:top-1/2 sm:-translate-y-1/2"
               >
                 ‹
               </button>
@@ -407,7 +412,8 @@ export function ScreenshotLightbox({
                   event.stopPropagation();
                   goToNext();
                 }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded bg-[var(--frame-bg)]/60 bg-black/40 font-mono text-lg text-[var(--body-text)] transition-colors hover:bg-[var(--frame-bg)] hover:text-[var(--accent-violet)] sm:right-3 sm:top-1/2 sm:-translate-y-1/2"
+                onDoubleClick={(event) => event.stopPropagation()}
+                className="absolute right-2 top-1/2 -translate-y-1/2 z-10 flex h-11 w-11 items-center justify-center rounded bg-[var(--frame-bg)]/60 bg-black/40 font-mono text-lg text-[var(--body-text)] transition-colors hover:bg-[var(--frame-bg)] hover:text-[var(--accent-violet)] sm:right-3 sm:top-1/2 sm:-translate-y-1/2"
               >
                 ›
               </button>
@@ -421,7 +427,7 @@ export function ScreenshotLightbox({
               transformOrigin,
               transition: scale === 1 && translate.x === 0 && translate.y === 0 ? "transform 150ms ease-out" : "none",
             }}
-            className="h-auto max-h-[70vh] sm:max-h-[75vh] w-full"
+            className="h-auto w-full"
           >
             <Image
               key={currentIndex}
@@ -429,7 +435,7 @@ export function ScreenshotLightbox({
               alt={screenshot.description}
               width={1280}
               height={720}
-              className="h-auto w-full object-contain"
+              className="h-auto w-full object-contain max-h-[70vh] sm:max-h-[75vh]"
               draggable={false}
             />
           </div>
