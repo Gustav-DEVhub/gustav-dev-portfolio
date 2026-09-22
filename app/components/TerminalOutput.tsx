@@ -1,9 +1,10 @@
 "use client";
 
-import { forwardRef } from "react";
+import { forwardRef, useRef, useState } from "react";
 import Image from "next/image";
 import { aboutContent, contactContent, projectsData, skillsContent } from "@/lib/data";
 
+import { ScreenshotLightbox, screenshotSrc } from "./ScreenshotLightbox";
 import type { OutputLine, ThemeId } from "./CliShell";
 
 interface TerminalOutputProps {
@@ -26,7 +27,7 @@ export const TerminalOutput = forwardRef<HTMLDivElement, TerminalOutputProps>(
             {line.type === "response" && <p className="text-sm leading-relaxed text-[var(--body-text)]">{line.content}</p>}
             {line.type === "error" && <p className="text-sm text-[var(--error-text)]">{line.content}</p>}
             {line.type === "about" && <AboutBlock />}
-            {line.type === "work" && <WorkBlock />}
+            {line.type === "work" && <WorkBlock activeTheme={activeTheme} />}
             {line.type === "contact" && <ContactBlock />}
             {line.type === "github" && <GithubBlock url={line.content} />}
             {line.type === "linkedin" && <LinkedinBlock url={line.content} />}
@@ -221,7 +222,19 @@ function SkillsBlock() {
   );
 }
 
-function WorkBlock() {
+function WorkBlock({ activeTheme }: { activeTheme: ThemeId }) {
+  // Lightbox state is deliberately local to each WorkBlock instance: /work can
+  // be invoked more than once, producing independent output blocks, and each
+  // must own its own open/closed lightbox rather than sharing global state.
+  const [openLightbox, setOpenLightbox] = useState<{
+    projectId: string;
+    screenshots: { filename: string; description: string }[];
+    initialIndex: number;
+  } | null>(null);
+  // The thumbnail button that opened the lightbox, so focus can be returned to
+  // it on close (ScreenshotLightbox has no access to the trigger element).
+  const lightboxTriggerRef = useRef<HTMLButtonElement | null>(null);
+
   return (
     <div className="mb-2">
       <p className="mb-4 font-mono text-xs uppercase tracking-wider text-zinc-400">Projects — {projectsData.length} deployed applications</p>
@@ -325,15 +338,30 @@ function WorkBlock() {
                       key={idx}
                       className="overflow-hidden rounded border border-zinc-800/80 bg-zinc-900/60"
                     >
-                      <div className="relative aspect-video w-full">
+                      {/* Same aspect-video crop and frame as before — the button
+                          only adds the click/keyboard affordance. */}
+                      <button
+                        type="button"
+                        aria-label={`Enlarge screenshot: ${screenshot.description}`}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          lightboxTriggerRef.current = event.currentTarget;
+                          setOpenLightbox({
+                            projectId: project.id,
+                            screenshots: project.screenshots,
+                            initialIndex: idx,
+                          });
+                        }}
+                        className="relative block aspect-video w-full cursor-pointer"
+                      >
                         <Image
-                          src={`/projects/${project.id}/${screenshot.filename}`}
+                          src={screenshotSrc(project.id, screenshot.filename)}
                           alt={screenshot.description}
                           fill
                           className="object-cover"
                           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         />
-                      </div>
+                      </button>
                       {screenshot.description && (
                         <figcaption className="border-t border-zinc-800/60 px-2 py-1.5 font-mono text-[10px] leading-snug text-zinc-500">
                           {screenshot.description}
@@ -355,6 +383,20 @@ function WorkBlock() {
           </article>
         ))}
       </div>
+
+      {openLightbox && (
+        <ScreenshotLightbox
+          projectId={openLightbox.projectId}
+          screenshots={openLightbox.screenshots}
+          initialIndex={openLightbox.initialIndex}
+          activeTheme={activeTheme}
+          onClose={() => {
+            setOpenLightbox(null);
+            // Return focus to the thumbnail that opened the modal.
+            lightboxTriggerRef.current?.focus();
+          }}
+        />
+      )}
     </div>
   );
 }

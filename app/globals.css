@@ -559,3 +559,35 @@ body {
 }
 
 
+
+
+/* Screenshot lightbox backdrop — themed translucent overlay, following the same
+   literal-per-theme convention as the #main-content > div translucent surfaces
+   above (lines 479–496). The backdrop sits behind the modal card and dims the
+   page behind it without fully obscuring it.
+
+   z-index is handled inline via Tailwind's z-[60] on the component's root div;
+   this is above the maximized shell (z-50), the retro scanline/vignette (z-20),
+   and the suggestion menu (z-10).
+
+   Unlike the #main-content > div rules, this targets the portaled lightbox root
+   directly (it is a child of document.body, outside #main-content), so there is
+   no :has() / ID prefix needed — the class alone is specific enough and the
+   portal always renders on body. */
+
+.screenshot-lightbox {
+  background-color: rgb(0 0 0 / 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px); /* Safari */
+}
+
+/* Retro CRT — same overlay using the retro tint so the backdrop reads as a
+   dimmed green field rather than a neutral black. */
+[data-theme="retro"] .screenshot-lightbox {
+  background-color: rgb(0 26 0 / 0.8);
+}
+
+/* Solarized Dark — same overlay using the solarized tint. */
+[data-theme="solarized"] .screenshot-lightbox {
+  background-color: rgb(0 43 54 / 0.8);
+}
