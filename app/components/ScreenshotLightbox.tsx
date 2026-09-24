@@ -54,22 +54,45 @@ export function ScreenshotLightbox({
 
   // Phase 4c-3 — zoom + pan state
   const ZOOM_SCALE = 2.5;
+  const MAX_SCALE = 4;
+  const PINCH_EXIT_MARGIN = 1.08;
+  const MIN_PINCH_ARM_DISTANCE = 10;
   const [scale, setScale] = useState(1);
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
   const [transformOrigin, setTransformOrigin] = useState("50% 50%");
   const imageWrapperRef = useRef<HTMLDivElement | null>(null);
   const panStart = useRef<{ x: number; y: number; translateX: number; translateY: number } | null>(null);
   const lastTap = useRef<{ time: number; x: number; y: number } | null>(null);
+  // Phase 4c-5b — one-shot: set when handleTap consumes a touch double-tap, so the
+  // compatibility dblclick synthesized for that same gesture is ignored instead of
+  // toggling zoom straight back. Cleared on the next pointerdown, so it can never
+  // block a later interaction if the browser emits no dblclick.
+  const suppressNextDblclick = useRef(false);
+  // Phase 4c-4 — tracks the live position of every currently-down touch pointer,
+  // keyed by pointerId. Not yet consumed by any gesture logic (added in 4c-4b).
+  const touches = useRef<Map<number, { x: number; y: number }>>(new Map());
+  // Phase 4c-4b — pinch gesture mode and the snapshot taken when a pinch arms.
+  const gestureMode = useRef<"none" | "pan" | "pinch">("none");
+  const pinchStart = useRef<{ dist: number; midX: number; midY: number; scale: number; translateX: number; translateY: number } | null>(null);
+  // Phase 4c-4c-fix-v3 — latches once the pinch reaches scale 1, so ordinary
+  // finger-contact jitter can't repeatedly re-baseline and amplify itself.
+  const pinchAtFloor = useRef(false);
+  // Phase 4c-5a — set when a touch sequence arms a pinch; suppresses tap handling
+  // for every release of that sequence (through the pinch -> pan demotion) until
+  // all of its touches have ended.
+  const suppressTap = useRef(false);
 
   const hasMultiple = screenshots.length > 1;
 
   const goToPrevious = useCallback(() => {
+    lastTap.current = null;
     setScale(1);
     setTranslate({ x: 0, y: 0 });
     setTransformOrigin("50% 50%");
     setCurrentIndex((i) => (i - 1 + screenshots.length) % screenshots.length);
   }, [screenshots.length]);
   const goToNext = useCallback(() => {
+    lastTap.current = null;
     setScale(1);
     setTranslate({ x: 0, y: 0 });
     setTransformOrigin("50% 50%");
@@ -83,11 +106,16 @@ export function ScreenshotLightbox({
     const now = Date.now();
     const isDoubleTap =
       lastTap.current !== null &&
-      now - lastTap.current.time < 300 &&
-      Math.hypot(event.clientX - lastTap.current.x, event.clientY - lastTap.current.y) < 30;
+      now - lastTap.current.time < 450 &&
+      Math.hypot(event.clientX - lastTap.current.x, event.clientY - lastTap.current.y) < 40;
 
     if (isDoubleTap) {
       lastTap.current = null;
+      // Phase 4c-5b — this touch double-tap is now owned by handleTap; the browser's
+      // synthesized dblclick for the same gesture must not apply the inverse zoom.
+      if (event.pointerType === "touch") {
+        suppressNextDblclick.current = true;
+      }
       if (scale > 1) {
         setScale(1);
         setTranslate({ x: 0, y: 0 });
@@ -153,6 +181,38 @@ export function ScreenshotLightbox({
     const ox = parsePart(parts[0] ?? "", 0.5);
     const oy = parsePart(parts[1] ?? parts[0] ?? "", 0.5);
     return [Math.min(Math.max(ox, 0), 1), Math.min(Math.max(oy, 0), 1)];
+  };
+
+  // Arms pinch mode the moment a second touch is being tracked, snapshotting the
+  // starting distance/midpoint/scale so a later phase can compute live pinch
+  // scale/translate from this baseline. No-op if not exactly 2 touches, or if
+  // already pinching.
+  const armPinchIfReady = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (touches.current.size !== 2 || gestureMode.current === "pinch") return;
+
+    const [[, posA], [, posB]] = Array.from(touches.current.entries());
+    const dist = Math.hypot(posA.x - posB.x, posA.y - posB.y);
+    const midX = (posA.x + posB.x) / 2;
+    const midY = (posA.y + posB.y) / 2;
+    // Phase 4c-4d — contacts closer than this are noise (a resting thumb, a
+    // smudged second tap), not a deliberate pinch. A near-zero baseline would
+    // make the first spread explode the scale ratio, so refuse to arm at all
+    // and leave every ref/state above untouched.
+    if (dist < MIN_PINCH_ARM_DISTANCE) return;
+
+    const rect = event.currentTarget.getBoundingClientRect();
+    const originX = ((midX - rect.left) / rect.width) * 100;
+    const originY = ((midY - rect.top) / rect.height) * 100;
+    setTransformOrigin(`${originX}% ${originY}%`);
+
+    pinchStart.current = { dist, midX, midY, scale, translateX: translate.x, translateY: translate.y };
+    gestureMode.current = "pinch";
+    pinchAtFloor.current = false;
+    panStart.current = null;
+    // Phase 4c-5a — a pinch invalidates any pending tap state, and no release of
+    // this touch sequence may write to it again.
+    lastTap.current = null;
+    suppressTap.current = true;
   };
 
   const screenshot = screenshots[currentIndex];
@@ -281,7 +341,20 @@ export function ScreenshotLightbox({
         <div
           className="relative flex w-full items-center justify-center bg-black/30 touch-none overflow-hidden"
           onPointerDown={(event) => {
-            if (!event.isPrimary) return;
+            // Phase 4c-5b — a new pointer sequence invalidates any one-shot dblclick
+            // suppression the previous sequence never consumed.
+            suppressNextDblclick.current = false;
+            if (!event.isPrimary) {
+              // Phase 4c-4d — the Map tracks at most the two pointers a pinch
+              // needs; a 3rd simultaneous touch is ignored entirely (not stored,
+              // so its moves self-gate on has(), its deletes are no-ops, and it
+              // never triggers armPinchIfReady or any gestureMode change).
+              if (event.pointerType === "touch" && touches.current.size < 2) {
+                touches.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+                armPinchIfReady(event);
+              }
+              return;
+            }
             // Only the primary (left) mouse button may start a pan/drag.
             if (event.pointerType === "mouse" && event.button !== 0) {
               // A non-primary button must never drive a pan — including a pan whose
@@ -294,6 +367,10 @@ export function ScreenshotLightbox({
             // pan/drag gesture or capture the pointer — otherwise the container steals the
             // derived click/dblclick stream from the button and it never fires.
             if ((event.target as Element).closest("button")) return;
+            if (event.pointerType === "touch") {
+              touches.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+              armPinchIfReady(event);
+            }
             activePointerId.current = event.pointerId;
             pointerStartX.current = event.clientX;
             pointerStartY.current = event.clientY;
@@ -304,6 +381,49 @@ export function ScreenshotLightbox({
             }
           }}
           onPointerMove={(event) => {
+            if (event.pointerType === "touch" && touches.current.has(event.pointerId)) {
+              touches.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+            }
+            if (event.pointerType === "touch" && gestureMode.current === "pinch") {
+              if (touches.current.size === 2 && pinchStart.current && pinchStart.current.dist > 0) {
+                const [[, posA], [, posB]] = Array.from(touches.current.entries());
+                const dist = Math.hypot(posA.x - posB.x, posA.y - posB.y);
+                const midX = (posA.x + posB.x) / 2;
+                const midY = (posA.y + posB.y) / 2;
+                const baseline = pinchStart.current;
+                const rawScale = (baseline.scale * dist) / baseline.dist;
+
+                if (pinchAtFloor.current && rawScale < PINCH_EXIT_MARGIN) {
+                  // Still inside the floor's jitter band — hold exactly at rest. No
+                  // re-baseline here: that repeated re-baseline is what caused the wobble.
+                  setScale(1);
+                  setTranslate({ x: 0, y: 0 });
+                } else {
+                  if (pinchAtFloor.current) {
+                    // Deliberate re-pinch past the exit margin — leave the latch and
+                    // re-baseline fresh so scaling resumes smoothly from here.
+                    pinchAtFloor.current = false;
+                    pinchStart.current = { dist, midX, midY, scale: 1, translateX: 0, translateY: 0 };
+                  }
+
+                  const activeBaseline = pinchStart.current;
+                  const newScale = Math.min(Math.max((activeBaseline.scale * dist) / activeBaseline.dist, 1), MAX_SCALE);
+                  const fade = Math.min((newScale - 1) / 0.1, 1);
+                  const proposedX = (activeBaseline.translateX + (midX - activeBaseline.midX) / newScale) * fade;
+                  const proposedY = (activeBaseline.translateY + (midY - activeBaseline.midY) / newScale) * fade;
+
+                  setScale(newScale);
+                  setTranslate(clampTranslate(proposedX, proposedY, newScale));
+
+                  if (newScale === 1 && !pinchAtFloor.current) {
+                    pinchAtFloor.current = true;
+                    pinchStart.current = { dist, midX, midY, scale: 1, translateX: 0, translateY: 0 };
+                  }
+                }
+              }
+              event.preventDefault();
+              return;
+            }
             if (event.pointerId !== activePointerId.current) return;
 
             if (scale > 1 && panStart.current) {
@@ -327,21 +447,58 @@ export function ScreenshotLightbox({
             }
           }}
           onPointerUp={(event) => {
+            // Phase 4c-5a — snapshot the suppression flag before the touch bookkeeping
+            // below can clear it, so the final release of a pinch-originated sequence
+            // still skips tap handling.
+            const tapSuppressed = suppressTap.current;
+
+            if (event.pointerType === "touch") {
+              touches.current.delete(event.pointerId);
+
+              if (gestureMode.current === "pinch") {
+                if (touches.current.size === 1) {
+                  const [remainingId, remainingPos] = Array.from(touches.current.entries())[0];
+                  activePointerId.current = remainingId;
+                  panStart.current = {
+                    x: remainingPos.x,
+                    y: remainingPos.y,
+                    translateX: translate.x,
+                    translateY: translate.y,
+                  };
+                  gestureMode.current = "pan";
+                  pinchStart.current = null;
+                  return;
+                }
+                if (touches.current.size === 0) {
+                  gestureMode.current = "none";
+                  pinchStart.current = null;
+                }
+              }
+
+              // Phase 4c-5a — the pinch sequence ends only once every touch is gone.
+              if (tapSuppressed && touches.current.size === 0) {
+                gestureMode.current = "none";
+                suppressTap.current = false;
+              }
+            }
             if (event.pointerId !== activePointerId.current) return;
             activePointerId.current = null;
             event.currentTarget.releasePointerCapture(event.pointerId);
             const panInfo = panStart.current;
             panStart.current = null;
 
+            // Phase 4c-5a — a sequence that became a pinch never yields a tap.
+            if (tapSuppressed) return;
+
             if (scale > 1) {
               // While zoomed, a pointer-up ends the pan. If the movement was
-              // tiny (< 10px) and this was a touch, treat it as a potential
+              // tiny (< 20px) and this was a touch, treat it as a potential
               // tap/double-tap rather than a finished pan.
               const moved = panInfo ? Math.hypot(
                 event.clientX - panInfo.x,
                 event.clientY - panInfo.y,
               ) : 0;
-              if (moved < 10 && event.pointerType === "touch") {
+              if (moved < 20 && event.pointerType === "touch") {
                 handleTap(event);
               }
               return;
@@ -355,6 +512,7 @@ export function ScreenshotLightbox({
               // and horizontal dominates vertical (to avoid triggering on vertical
               // scrolls/drags).
               if (Math.abs(deltaX) >= 50 && Math.abs(deltaX) > Math.abs(deltaY)) {
+                lastTap.current = null;
                 // Swipe left (negative delta) → next; swipe right → previous
                 if (deltaX < 0) {
                   goToNext();
@@ -368,12 +526,46 @@ export function ScreenshotLightbox({
             }
           }}
           onPointerCancel={(event) => {
+            if (event.pointerType === "touch") {
+              touches.current.delete(event.pointerId);
+
+              if (gestureMode.current === "pinch") {
+                if (touches.current.size === 1) {
+                  const [remainingId, remainingPos] = Array.from(touches.current.entries())[0];
+                  activePointerId.current = remainingId;
+                  panStart.current = {
+                    x: remainingPos.x,
+                    y: remainingPos.y,
+                    translateX: translate.x,
+                    translateY: translate.y,
+                  };
+                  gestureMode.current = "pan";
+                  pinchStart.current = null;
+                  return;
+                }
+                if (touches.current.size === 0) {
+                  gestureMode.current = "none";
+                  pinchStart.current = null;
+                }
+              }
+
+              // Phase 4c-5a — the pinch sequence ends only once every touch is gone.
+              if (suppressTap.current && touches.current.size === 0) {
+                gestureMode.current = "none";
+                suppressTap.current = false;
+              }
+            }
             if (event.pointerId !== activePointerId.current) return;
             activePointerId.current = null;
             panStart.current = null;
           }}
           onDoubleClick={(event) => {
             event.stopPropagation();
+            // Phase 4c-5b — already handled by handleTap as a touch double-tap.
+            if (suppressNextDblclick.current) {
+              suppressNextDblclick.current = false;
+              return;
+            }
             if (scale > 1) {
               setScale(1);
               setTranslate({ x: 0, y: 0 });
