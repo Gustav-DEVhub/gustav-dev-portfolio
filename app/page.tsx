@@ -77,7 +77,7 @@ export default function Home() {
       </main>
 
       <footer className="sr-only">
-        <p>Portfolio by Gustav Calderon Tenorio - AI-Augmented Developer</p>
+        <p>Portfolio by Gustav Calderon Tenorio - AI-Powered Full-Stack Developer</p>
       </footer>
     </>
   );

@@ -17,7 +17,7 @@ const BOOT_LINES: string[] = [
   "SYS:: Mounting component modules...",
   "PROGRESS::",
   "SYS:: Resolving case studies & architecture...",
-  "SYS:: Strategic positioning: AI-Augmented Developer",
+  "SYS:: Strategic positioning: AI-Powered Full-Stack Developer",
   "\u2605 gustav.tenorio v1.0.0 \u2014 ready.",
   "PROMPT::",
 ];

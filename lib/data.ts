@@ -197,17 +197,17 @@ export const projectsData: Project[] = [
 ];
 
 export const aboutContent = {
-  role: "AI-Augmented Developer",
-  intro: "I'm a self-taught developer working as an AI-Augmented Developer — practical, deployed work instead of formal employment.",
+  role: "AI-Powered Full-Stack Developer",
+  intro: "I'm a self-taught developer focused on building and integrating applications, internal tools, and automations — including AI-powered functionality. My workflow is AI-augmented: I use AI coding agents to accelerate implementation while I handle architecture, debugging, testing, and engineering decisions.",
   evidence:
-    "The work on this page is the evidence: live products, public GitHub repositories, and the engineering decisions behind them.",
-  availability: "Available for junior roles and freelance web development.",
+    "My work is project-based and backed by live deployments, public repositories, and documented engineering decisions.",
+  availability: "Available for junior full-stack roles and freelance application, AI integration, and automation projects.",
   location: "Based in Peru (UTC-5) — Available for Remote Work & Relocation",
   sections: [
     {
       subtitle: "How I got here",
       paragraphs: [
-        "I entered software development through Zero to Mastery (ZTM). I do not have formal employment in technology. What I do have is practical work: public repositories, production deployments on Vercel, and the reason each decision exists.",
+        "I entered software development through Zero to Mastery (ZTM). I haven't held a formal technology role yet. My experience so far is project-based: building real applications, maintaining public repositories, deploying projects to Vercel, and documenting the engineering decisions behind them.",
         "I use AI-assisted development, routed through multiple model providers, to move faster on implementation and iteration. The products still have to be designed, built, deployed, and explained.",
       ],
       bullets: [] as string[],
@@ -216,7 +216,7 @@ export const aboutContent = {
       subtitle: "What I'm looking for now",
       paragraphs: [] as string[],
       bullets: [
-        "Full-stack and frontend web applications",
+        "Full-stack applications, internal tools, and automations — including AI-powered functionality",
         "Landing pages and small-to-medium tools that need to ship",
         "Remote junior roles and freelance projects",
         "Startups, small teams, and clients who need something functional — not theoretical",
@@ -238,25 +238,28 @@ export const aboutContent = {
 
 export const skillsContent = {
   capabilities: [
-    "Full-stack app development — frontend + backend, end-to-end",
+    "Building applications, internal tools, and automations — frontend to backend",
     "Deployment to production (Vercel) · version control (GitHub)",
     "API and third-party service integration",
-    "AI-assisted development with a self-built workflow, not tied to a single provider",
+    "AI-augmented workflow — using AI coding agents to accelerate delivery while owning architecture, debugging, and testing",
   ],
   tools: {
     "Frontend":
       "React · TypeScript · Next.js · JavaScript · HTML / CSS · Tailwind",
-    "Backend & Data":
-      "Node.js · Express\nPython (fundamentals — loops, functions, logical operators, scope, and ongoing learning)",
+    "Backend":
+      "Node.js · Express",
+    "Python":
+      "Fundamentals — loops, functions, logical operators, scope, and ongoing learning",
     "AI Workflow":
       "Cline (VS Code agent interface) · OpenRouter (multi-provider model routing)",
   },
 };
 
 export const contactContent = {
-  email: "gustavo.calderon.dev@gmail.com",
+  email: "contact@gustavtenorio.com",
   linkedin: "https://www.linkedin.com/in/gustavo-calderon-tenorio-530049369",
   github: "https://github.com/Gustav-DEVhub",
+  location: "Lima, Peru",
 };
 
 export const heroContent = `I build real products, deploy them, and can explain the engineering and product decisions behind them.`;
@@ -267,6 +270,7 @@ export const helpText = `  /about      - Learn about Gustav
   /skills     - Show skills and tools
   /work       - View projects
   /contact    - Get in touch
+  /email      - Get in touch by email
   /github     - Open GitHub profile in a new tab
   /linkedin   - Open LinkedIn profile in a new tab
   /themes     - Change terminal theme

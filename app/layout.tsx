@@ -19,12 +19,13 @@ const pressStart = Press_Start_2P({
 });
 
 export const metadata: Metadata = {
-  title: "Gustav Calderon Tenorio | AI-Augmented Developer",
+  title: "Gustav Calderon Tenorio | AI-Powered Full-Stack Developer",
   description:
-    "Portfolio of Gustav Calderon Tenorio, an AI-Augmented Developer building real, functional web applications with React, Next.js, TypeScript, and AI tools. Based in Peru (UTC-5) — available for remote work and relocation.",
+    "Portfolio of Gustav Calderon Tenorio, an AI-Powered Full-Stack Developer who builds and integrates applications, internal tools, and automations — including AI-powered functionality — with React, Next.js, and TypeScript. Based in Peru (UTC-5) — available for remote work and relocation.",
   keywords: [
-    "AI-Augmented Developer",
+    "AI-Powered Full-Stack Developer",
     "Web Development",
+    "Full-Stack Development",
     "Next.js",
     "TypeScript",
     "React",
@@ -35,17 +36,17 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Gustav Calderon Tenorio" }],
   openGraph: {
-    title: "Gustav Calderon Tenorio | AI-Augmented Developer",
+    title: "Gustav Calderon Tenorio | AI-Powered Full-Stack Developer",
     description:
-      "Functional web applications built with React, Next.js, TypeScript, and AI tools. Based in Peru (UTC-5) — available for remote work and relocation.",
+      "Full-stack applications, internal tools, and automations — built with React, Next.js, TypeScript, and AI-powered functionality. Based in Peru (UTC-5) — available for remote work and relocation.",
     type: "website",
     locale: "en_US",
   },
   twitter: {
     card: "summary",
-    title: "Gustav Calderon Tenorio | AI-Augmented Developer",
+    title: "Gustav Calderon Tenorio | AI-Powered Full-Stack Developer",
     description:
-      "Functional web applications built with React, Next.js, TypeScript, and AI tools. Based in Peru (UTC-5) — available for remote work and relocation.",
+      "Full-stack applications, internal tools, and automations — built with React, Next.js, TypeScript, and AI-powered functionality. Based in Peru (UTC-5) — available for remote work and relocation.",
   },
 };
 

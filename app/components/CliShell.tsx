@@ -32,6 +32,7 @@ export type OutputLine = {
     | "about"
     | "work"
     | "contact"
+    | "email"
     | "loading"
     | "github"
     | "linkedin"
@@ -260,6 +261,23 @@ export default function CliShell() {
             addLine("contact");
             setPendingCommand(null);
             
+            if (commandQueueRef.current.length > 0) {
+              const next = commandQueueRef.current.shift()!;
+              processCommandRef.current?.(next);
+            } else {
+              isProcessingRef.current = false;
+            }
+          }, LOADER_DURATION);
+          break; }
+
+        case "/email": {
+          const verb = LOADING_VERBS[Math.floor(Math.random() * LOADING_VERBS.length)];
+          setPendingCommand(verb);
+          clearLoadingState();
+          loadingTimerRef.current = setTimeout(() => {
+            addLine("email", contactContent.email);
+            setPendingCommand(null);
+
             if (commandQueueRef.current.length > 0) {
               const next = commandQueueRef.current.shift()!;
               processCommandRef.current?.(next);

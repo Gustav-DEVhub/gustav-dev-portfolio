@@ -29,6 +29,7 @@ export const TerminalOutput = forwardRef<HTMLDivElement, TerminalOutputProps>(
             {line.type === "about" && <AboutBlock />}
             {line.type === "work" && <WorkBlock activeTheme={activeTheme} />}
             {line.type === "contact" && <ContactBlock />}
+            {line.type === "email" && <EmailBlock email={line.content} />}
             {line.type === "github" && <GithubBlock url={line.content} />}
             {line.type === "linkedin" && <LinkedinBlock url={line.content} />}
             {line.type === "skills" && <SkillsBlock />}
@@ -83,7 +84,7 @@ function HeroBlock() {
           <div className="flex items-start gap-2">
             <span className="shrink-0 font-mono text-xs text-[var(--accent-subtitle)]">STATUS:</span>
             <p className="font-mono text-xs leading-relaxed text-[var(--body-text)]">
-              Based in Peru (UTC-5) — Available for Remote Work. Open to junior roles and freelance web development projects.
+              Based in Peru (UTC-5) — Available for Remote Work. Open to junior full-stack roles and freelance application development, AI integration, and automation projects.
             </p>
           </div>
         </div>
@@ -97,10 +98,6 @@ function HeroBlock() {
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="flex items-start gap-2">
-            <span className="shrink-0 font-mono text-xs text-[var(--accent-violet)]">/help</span>
-            <span className="font-mono text-xs text-zinc-400">— Show available commands</span>
-          </div>
-          <div className="flex items-start gap-2">
             <span className="shrink-0 font-mono text-xs text-[var(--accent-violet)]">/about</span>
             <span className="font-mono text-xs text-zinc-400">— About Gustav</span>
           </div>
@@ -112,27 +109,10 @@ function HeroBlock() {
             <span className="shrink-0 font-mono text-xs text-[var(--accent-violet)]">/work</span>
             <span className="font-mono text-xs text-zinc-400">— Explore selected projects</span>
           </div>
-          <div className="flex items-start gap-2">
-            <span className="shrink-0 font-mono text-xs text-[var(--accent-violet)]">/contact</span>
-            <span className="font-mono text-xs text-zinc-400">— Contact information</span>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="shrink-0 font-mono text-xs text-[var(--accent-violet)]">/github</span>
-            <span className="font-mono text-xs text-zinc-400">— GitHub profile</span>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="shrink-0 font-mono text-xs text-[var(--accent-violet)]">/linkedin</span>
-            <span className="font-mono text-xs text-zinc-400">— LinkedIn profile</span>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="shrink-0 font-mono text-xs text-[var(--accent-violet)]">/themes</span>
-            <span className="font-mono text-xs text-zinc-400">— Change terminal theme</span>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="shrink-0 font-mono text-xs text-[var(--accent-violet)]">/clear</span>
-            <span className="font-mono text-xs text-zinc-400">— Clear terminal</span>
-          </div>
         </div>
+        <p className="mt-3 font-mono text-xs text-zinc-500">
+          ... /help for all commands · /themes to change the vibe
+        </p>
       </div>
     </div>
   );
@@ -405,20 +385,37 @@ function ContactBlock() {
   return (
     <div className="mb-2">
       <p className="mb-4 text-xs uppercase tracking-wider text-zinc-400">Contact</p>
-      <p className="mb-4 text-sm leading-relaxed text-[var(--body-text)]">If you need a web application built, deployed, and explained - let us talk.</p>
+      <p className="mb-4 text-sm leading-relaxed text-[var(--body-text)]">If you need an application, internal tool, or automation built, deployed, and explained - let&apos;s talk.</p>
       <div className="space-y-3">
-        <a href={`mailto:${contactContent.email}`} className="group flex items-center gap-3 text-sm text-[var(--body-text)] transition-colors hover:text-[var(--accent-green)] focus-visible:ring-2 focus-visible:ring-[var(--accent-violet)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d1117] focus-visible:rounded-md">
-          <span className="text-zinc-500 group-hover:text-[var(--accent-green)]">@</span>
-          <span className="underline underline-offset-2">{contactContent.email}</span>
+        <a
+          href={`mailto:${contactContent.email}`}
+          className="group flex items-center gap-3 text-sm text-[var(--body-text)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-400"
+        >
+          <span className="text-zinc-500 group-hover:text-[var(--accent-green)]">[MAIL]</span>
+          <span>Email → /email</span>
         </a>
-        <a href={contactContent.linkedin} target="_blank" rel="noopener noreferrer" className="group flex items-center gap-3 text-sm text-[var(--body-text)] transition-colors hover:text-cyan-400 focus-visible:ring-2 focus-visible:ring-[var(--accent-violet)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d1117] focus-visible:rounded-md">
-          <span className="text-zinc-500 group-hover:text-cyan-400">in</span>
-          <span className="underline underline-offset-2">linkedin.com/in/gustavo-calderon-tenorio-530049369</span>
+        <a
+          href={contactContent.linkedin}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group flex items-center gap-3 text-sm text-[var(--body-text)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-400"
+        >
+          <span className="text-zinc-500 group-hover:text-cyan-400">[IN]</span>
+          <span>LinkedIn → /linkedin</span>
         </a>
-        <a href={contactContent.github} target="_blank" rel="noopener noreferrer" className="group flex items-center gap-3 text-sm text-[var(--body-text)] transition-colors hover:text-cyan-400 focus-visible:ring-2 focus-visible:ring-[var(--accent-violet)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d1117] focus-visible:rounded-md">
+        <a
+          href={contactContent.github}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group flex items-center gap-3 text-sm text-[var(--body-text)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-400"
+        >
           <span className="text-zinc-500 group-hover:text-cyan-400">[GH]</span>
-          <span className="underline underline-offset-2">github.com/Gustav-DEVhub</span>
+          <span>GitHub → /github</span>
         </a>
+        <div className="group flex items-center gap-3 text-sm text-[var(--body-text)]">
+          <span className="text-zinc-500">[LOC]</span>
+          <span>{contactContent.location}</span>
+        </div>
       </div>
     </div>
   );
@@ -428,7 +425,7 @@ function GithubBlock({ url }: { url: string }) {
   return (
     <div className="mb-2 space-y-3">
       <p className="font-mono text-xs leading-relaxed text-[var(--body-text)]">
-        Explore my repositories, contributions, and open source work on GitHub.
+        Explore my repositories, projects, and engineering work on GitHub.
       </p>
       <a
         href={url}
@@ -457,6 +454,24 @@ function LinkedinBlock({ url }: { url: string }) {
         className="inline-flex items-center gap-2 rounded border border-zinc-700/60 bg-zinc-900/40 px-3 py-1.5 font-mono text-xs text-zinc-200 transition-colors hover:border-purple-500/50 hover:bg-purple-500/10 hover:text-purple-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-400"
       >
         <span>[ VIEW LINKEDIN</span>
+        <span aria-hidden="true">→</span>
+        <span>]</span>
+      </a>
+    </div>
+  );
+}
+
+function EmailBlock({ email }: { email: string }) {
+  return (
+    <div className="mb-2 space-y-3">
+      <p className="font-mono text-xs leading-relaxed text-[var(--body-text)]">
+        Best way to reach me for freelance or full-time opportunities.
+      </p>
+      <a
+        href={`mailto:${email}`}
+        className="inline-flex items-center gap-2 rounded border border-zinc-700/60 bg-zinc-900/40 px-3 py-1.5 font-mono text-xs text-zinc-200 transition-colors hover:border-purple-500/50 hover:bg-purple-500/10 hover:text-purple-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-400"
+      >
+        <span>[ VIEW EMAIL</span>
         <span aria-hidden="true">→</span>
         <span>]</span>
       </a>
