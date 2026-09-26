@@ -74,6 +74,9 @@ export default function CliShell() {
     () => (isMobile ? "maximized" : "open")
   );
   const [pendingCommand, setPendingCommand] = useState<string | null>(null);
+  // Hidden easter egg (`sudo hire gustav`) — in-memory single-use flag, one
+  // reveal per session; deliberately not persisted, and reset by /clear.
+  const [hireEasterEggUsed, setHireEasterEggUsed] = useState(false);
   const [theme, setTheme] = useState<ThemeId>("dark");
   // Phase 2l.2 — transient flag for the open <-> maximized scale pop. Kept
   // separate from `windowState` on purpose so it never gates existing logic.
@@ -180,6 +183,38 @@ export default function CliShell() {
       scrollToBottom();
 
       const cmd = normalizeCommand(trimmed);
+
+      // Hidden easter egg — exact match only, never advertised in /help or the
+      // autocomplete pool. Input is already slash-normalized by TerminalInput
+      // before it reaches here, so `cmd` (not `trimmed`) is compared; the full
+      // string is lowercased to also cover case variations in the trailing words.
+      if (cmd.toLowerCase() === "/sudo hire gustav") {
+        const verb = LOADING_VERBS[Math.floor(Math.random() * LOADING_VERBS.length)];
+        setPendingCommand(verb);
+        clearLoadingState();
+        loadingTimerRef.current = setTimeout(() => {
+          if (!hireEasterEggUsed) {
+            addLine(
+              "system",
+              "[sudo] password for gustav: ********\nAuthenticating...\nAccess granted.\n\n> Candidate: Gustav Calderon Tenorio\n> Role: Full-Stack Developer | AI Integration & Automation\n> Status: Available\n> Next step: /email or /linkedin to get in touch"
+            );
+            setHireEasterEggUsed(true);
+            setPendingCommand(null);
+
+            if (commandQueueRef.current.length > 0) {
+              const next = commandQueueRef.current.shift()!;
+              processCommandRef.current?.(next);
+            } else {
+              isProcessingRef.current = false;
+            }
+          } else {
+            addLine("system", "I think you're looking for /contact — loading results...");
+            setPendingCommand(null);
+            processCommandRef.current?.("/contact");
+          }
+        }, LOADER_DURATION);
+        return;
+      }
 
       switch (cmd) {
         case "/help": {
@@ -377,6 +412,7 @@ export default function CliShell() {
         case "/clear":
           clearLoadingState();
           setPendingCommand(null);
+          setHireEasterEggUsed(false);
           setOutputLines([{ id: getNextId(), type: "hero", content: "" }]);
           isProcessingRef.current = false;
           if (commandQueueRef.current.length > 0) {
@@ -436,7 +472,7 @@ export default function CliShell() {
           }
       }
     },
-    [addLine, getNextId, clearLoadingState, scrollToBottom]
+    [addLine, getNextId, clearLoadingState, scrollToBottom, hireEasterEggUsed]
   );
 
   // Keep processCommandRef in sync with the latest processCommand function

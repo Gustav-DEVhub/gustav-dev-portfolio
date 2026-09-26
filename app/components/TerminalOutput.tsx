@@ -2,7 +2,7 @@
 
 import { forwardRef, useRef, useState } from "react";
 import Image from "next/image";
-import { aboutContent, contactContent, projectsData, skillsContent } from "@/lib/data";
+import { aboutContent, contactContent, helpText, projectsData, skillsContent } from "@/lib/data";
 
 import { ScreenshotLightbox, screenshotSrc } from "./ScreenshotLightbox";
 import type { OutputLine, ThemeId } from "./CliShell";
@@ -22,7 +22,7 @@ export const TerminalOutput = forwardRef<HTMLDivElement, TerminalOutputProps>(
           <div key={line.id} className="mb-2">
             {line.type === "hero" && <HeroBlock />}
             {line.type === "command" && <p className="text-sm text-[var(--accent-violet)]"><span className="select-none text-zinc-500">$ </span><span>{line.content}</span></p>}
-            {line.type === "system" && <pre className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--body-text)]">{line.content}</pre>}
+            {line.type === "system" && (line.content === helpText ? <HelpBlock /> : <pre className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--body-text)]">{line.content}</pre>)}
             {line.type === "helpHeader" && <p className="text-sm font-bold text-[var(--accent-subtitle)]">{line.content}</p>}
             {line.type === "response" && <p className="text-sm leading-relaxed text-[var(--body-text)]">{line.content}</p>}
             {line.type === "error" && <p className="text-sm text-[var(--error-text)]">{line.content}</p>}
@@ -52,6 +52,24 @@ export const TerminalOutput = forwardRef<HTMLDivElement, TerminalOutputProps>(
     );
   }
 );
+
+// /help body + footer. The command list arrives as a plain `system` line
+// (CliShell emits `addLine("system", helpText)`), so the shared helpText
+// constant identifies it: only /help produces that exact string. Keeps the
+// list markup byte-identical and adds the hints as separate, inert paragraphs.
+function HelpBlock() {
+  return (
+    <>
+      <pre className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--body-text)]">{helpText}</pre>
+      <p className="mt-3 font-mono text-xs text-zinc-500">
+        Tip: Use ↑↓ arrows for command history, Tab for autocomplete
+      </p>
+      <p className="font-mono text-xs text-zinc-500">
+        not everything is in /help . . .
+      </p>
+    </>
+  );
+}
 
 function HeroBlock() {
   return (
@@ -217,7 +235,7 @@ function WorkBlock({ activeTheme }: { activeTheme: ThemeId }) {
 
   return (
     <div className="mb-2">
-      <p className="mb-4 font-mono text-xs uppercase tracking-wider text-zinc-400">Projects — {projectsData.length} deployed applications</p>
+      <p className="mb-4 font-mono text-xs uppercase tracking-wider text-[var(--accent-subtitle)]">Projects — {projectsData.length} deployed applications</p>
       <div className="space-y-10">
         {projectsData.map((project, index) => (
           <article key={project.id} className="space-y-5">
@@ -384,7 +402,7 @@ function WorkBlock({ activeTheme }: { activeTheme: ThemeId }) {
 function ContactBlock() {
   return (
     <div className="mb-2">
-      <p className="mb-4 text-xs uppercase tracking-wider text-zinc-400">Contact</p>
+      <p className="mb-4 text-xs uppercase tracking-wider text-[var(--accent-subtitle)]">Get in Touch</p>
       <p className="mb-4 text-sm leading-relaxed text-[var(--body-text)]">If you need an application, internal tool, or automation built, deployed, and explained - let&apos;s talk.</p>
       <div className="space-y-3">
         <a
@@ -392,7 +410,7 @@ function ContactBlock() {
           className="group flex items-center gap-3 text-sm text-[var(--body-text)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-400"
         >
           <span className="text-zinc-500 group-hover:text-[var(--accent-green)]">[MAIL]</span>
-          <span>Email → /email</span>
+          <span>{contactContent.email}</span>
         </a>
         <a
           href={contactContent.linkedin}
@@ -417,6 +435,9 @@ function ContactBlock() {
           <span>{contactContent.location}</span>
         </div>
       </div>
+      <p className="mt-3 font-mono text-xs text-zinc-500">
+        ... psst, try sudo hire gustav
+      </p>
     </div>
   );
 }
@@ -463,18 +484,20 @@ function LinkedinBlock({ url }: { url: string }) {
 
 function EmailBlock({ email }: { email: string }) {
   return (
-    <div className="mb-2 space-y-3">
+    <div className="mb-4 space-y-4">
       <p className="font-mono text-xs leading-relaxed text-[var(--body-text)]">
         Best way to reach me for freelance or full-time opportunities.
       </p>
-      <a
-        href={`mailto:${email}`}
-        className="inline-flex items-center gap-2 rounded border border-zinc-700/60 bg-zinc-900/40 px-3 py-1.5 font-mono text-xs text-zinc-200 transition-colors hover:border-purple-500/50 hover:bg-purple-500/10 hover:text-purple-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-400"
-      >
-        <span>[ VIEW EMAIL</span>
-        <span aria-hidden="true">→</span>
-        <span>]</span>
-      </a>
+      <div className="space-y-1.5">
+        <a
+          href={`mailto:${email}`}
+          className="inline-flex items-center gap-2 rounded border border-zinc-700/60 bg-zinc-900/40 px-3 py-1.5 font-mono text-xs text-zinc-200 transition-colors hover:border-purple-500/50 hover:bg-purple-500/10 hover:text-[var(--accent-green)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple-400"
+        >
+          <span className="text-zinc-500">[MAIL]</span>
+          <span>{email}</span>
+        </a>
+        <p className="font-mono text-xs text-zinc-500">tap to email</p>
+      </div>
     </div>
   );
 }
