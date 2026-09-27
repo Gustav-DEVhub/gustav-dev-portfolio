@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Terminal prompt ">_" favicon. Flat, two solid fills, no gradients,
+       no stroke-outline, no drop shadow, no <text> (font-independent).
+
+       Canvas: 32x32 (clean 2x downscale to the 16px favicon raster).
+       Background: #0d1117, corner radius 2.56 = exactly 8% of 32.
+
+       Chevron ">": 45-degree arms, stroke weight 3.8, centreline apex at
+       (13.5, 16), arm run 9.16. The six vertices are the outline of that
+       chevron band with flat (perpendicular) end caps, so it is drawn as a
+       solid filled shape rather than a stroked line.
+       Underscore "_": same 3.8 stroke weight, bottom-aligned with the
+       chevron's lowest ink.
+
+       Glyph bounds: x 3 -> 29 (81% of the canvas), y 5.5 -> 26.5 (66%),
+       leaving only a 3-unit (9.4%) side margin instead of the generous
+       margin of the reference, so both glyphs stay legible at 16x16. -->
+  <rect width="32" height="32" rx="2.56" fill="#0d1117" />
+  <path d="M5.69 5.5 L16.19 16 L5.69 26.5 L3 23.81 L10.81 16 L3 8.19 Z" fill="#a78bfa" />
+  <rect x="18" y="22.7" width="11" height="3.8" fill="#a78bfa" />
+</svg>

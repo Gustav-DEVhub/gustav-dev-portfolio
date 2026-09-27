@@ -658,10 +658,15 @@ export default function CliShell() {
         }}
       />
 
-      {/* Dominant Pixelated Header */}
+      {/* Dominant Pixelated Header. The two spans are inline above the mobile
+          breakpoint (single line, unchanged) and are stacked by
+          .pixel-name__line inside the 639px media query in globals.css — the
+          same query that owns the mobile breakpoint, so there is exactly one
+          source of truth and no viewport-dependent rendering here. */}
       <div className="flex-shrink-0 border-b border-zinc-800 bg-[#0d1117] px-4 py-3 sm:px-6 sm:py-4">
         <p className="pixel-name pixel-name--hero pixel-name--accent text-center sm:text-left">
-          Gustav Calderon Tenorio
+          <span className="pixel-name__line">Gustav</span>{" "}
+          <span className="pixel-name__line">Calderon Tenorio</span>
         </p>
       </div>
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
